@@ -2,13 +2,7 @@
 
 ## Fully functional, but still unfinished AI assistant written on Python thats works on your PC!
 
-This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can listen, think, speak, memorize and most important use ANY tools you provide him. Currently I already wrote tools like:
-
-* Weather fetching
-* Keyboard interactions(read and copy stuff to your clipboard)
-* Create and edit todos
-
-More coming soon!
+Jarvis is a local voice assistant that listens for a wake word, transcribes speech, runs an Ollama model, speaks responses, and can use tools (weather, clipboard, todos, memory).
 
 ## Check it out!
 
@@ -25,23 +19,57 @@ Place for vid, I'll update it when create first ship!
 
 **Many thanks to the devs!!**
 
-## How to install Jarvis to your PC
+## Requirements
 
-Now the only way is to copy this repo and then to play with it for few hours:/
+- Python 3.11 or 3.12
+- Ollama installed and available in PATH
+- Microphone and speakers
+- Optional GPU (CPU also works with slower settings)
 
-But soon enought I'll start on working on the tutorial and may be even load Jarvis to some platform that will allow you to download him without any head aches.
+## Install
+
+Install with pipx (recommended):
+`pipx install https://github.com/lusparkl/local_ai_assistant_jarvis`
+
+Or for local development:
+`python -m venv .venv`
+`.venv\Scripts\activate`
+`python -m pip install -e .`
 
 
-## How to tweak this project for your own uses
+## First-time setup
 
-Since I'm trying to write modular project It'll be easy to change modules as you want. You can completly change tts model or even switch to some api(what I'll totaly understand, because it might be really slow on weak PC's). 
+Run:
+`jarvis init`
 
-But the easisest way - add your tools. You can write tools that YOU really need, and I'm sure that there will be some, because I'm writing only tools that almost everyone needs. Now to add your tool you need:
-1. Create your file or write code in existing if theme is the same in the /tools
-2. Write your tool function that AI will use, you can use my functions as examples. And don't forget about commenting your function so AI will understand what it's for!!
-3. Import and add your tool to the services/manage_tools. You can disable tools by setting value in front of it's name to False btw
+This creates runtime folders, prepares `.env`, initializes local storage, and can set up model paths.
 
-Your tool is now working!
+Then run health checks:
+`jarvis doctor`
+
+## Run
+
+Start assistant:
+`jarvis start`
+
+## Useful commands
+
+- `jarvis init --help`
+- `jarvis doctor`
+- `jarvis autostart enable`
+- `jarvis autostart status`
+- `jarvis autostart disable`
+
+## Environment variables
+
+Set `WEATHER_API_KEY` in `.env` to enable weather tool.  
+`jarvis init` tells you the `.env` path it uses.
+
+## Adding tools
+
+1. Add a tool function in `tools/<name>.py` with a clear docstring.
+2. Import and enable it in `services/manage_tools.py`.
+3. If needed, add dependencies in `pyproject.toml`.
 
 ## Find a bug?
 
