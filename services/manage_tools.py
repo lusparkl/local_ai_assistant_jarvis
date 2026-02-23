@@ -6,7 +6,7 @@ from tools.end_chat import end_chat
 
 tools = {
     retrieve_memory: True,
-    get_current_weather: True,
+    get_current_weather: False,
     get_forecast: True,
     paste_from_user_keyboard: True,
     copy_to_user_keyboard: True,
