@@ -29,7 +29,7 @@ Place for vid, I'll update it when create first ship!
 ## Install
 
 Install with pipx (recommended):
-`pipx install https://github.com/lusparkl/local_ai_assistant_jarvis`
+`pipx install "git+https://github.com/lusparkl/local_ai_assistant_jarvis.git"`
 
 Or for local development:
 `python -m venv .venv`
