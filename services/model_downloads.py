@@ -33,7 +33,7 @@ def download_runtime_models(
     import faster_whisper
     import openwakeword
 
-    model_name = whisper_model or config.WHISPER_MODEL
+    whisper_model_name = whisper_model or config.WHISPER_MODEL
     root = Path(models_root) if models_root else (Path(config.DATA_DIR) / "models")
     openwakeword_dir = root / "openwakeword"
     whisper_dir = root / "whisper"
@@ -44,9 +44,9 @@ def download_runtime_models(
     previous_openwakeword_dir = os.getenv("OPENWAKEWORD_MODEL_DIR")
     os.environ["OPENWAKEWORD_MODEL_DIR"] = str(openwakeword_dir)
     try:
-        for model_name in JARVIS_WAKE_MODEL_NAMES:
+        for wake_model_name in JARVIS_WAKE_MODEL_NAMES:
             try:
-                openwakeword.utils.download_models([model_name])
+                openwakeword.utils.download_models([wake_model_name])
             except Exception:
                 continue
 
@@ -60,7 +60,7 @@ def download_runtime_models(
         else:
             os.environ["OPENWAKEWORD_MODEL_DIR"] = previous_openwakeword_dir
 
-    whisper_path = faster_whisper.download_model(model_name, str(whisper_dir))
+    whisper_path = faster_whisper.download_model(whisper_model_name, str(whisper_dir))
 
     return {
         "wake_word_model_path": str(Path(wake_path).resolve()),
