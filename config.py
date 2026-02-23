@@ -1,26 +1,91 @@
-SAMPLE_RATE_HZ = 16000
+from pathlib import Path
+import os
+from dotenv import load_dotenv
 
-#Wake Word
-WAKE_BLOCK_SEC = 2
-WAKE_WORD_MODEL_PATH = "D:/tech_stuff/coding/ai_models/openwakeword_models/hey_jarvis_v0.1.tflite"
-WAKE_TRESHOLD = 0.5
+# Runtime defaults are intentionally machine-agnostic.
+# Run `jarvis init` to generate paths and model settings in your .env.
+APP_NAME = "Jarvis"
+_THIS_DIR = Path(__file__).resolve().parent
+_HOME = Path.home()
 
-#Transcribtion
-BLOCK_SEC=0.25
-WINDOW_SEC=7
-STEP_SEC = 0.25
-ENDPOINT_SILENCE_MS=2000
-WHISPER_MODEL = "distil-large-v3"
-WHISPER_MODEL_PATH = "D:/tech_stuff/coding/ai_models/huggingface_cache/hub/models--Systran--faster-distil-whisper-large-v3/snapshots/c3058b475261292e64a0412df1d2681c06260fab"
-WHISPER_COMPUTE_TYPE = "float16"
-WHISPER_DEVICE = "cuda"
-TRANSCRIBTION_STAB_WINDOW = 2
+_DEFAULT_CONFIG_DIR = Path(os.getenv("APPDATA", _HOME / ".config")) / APP_NAME
+_DEFAULT_DATA_DIR = Path(os.getenv("LOCALAPPDATA", _HOME / ".local" / "share")) / APP_NAME
 
-#Logging
-LOG_LEVEL="INFO"
+CONFIG_DIR = Path(os.getenv("JARVIS_CONFIG_DIR", _DEFAULT_CONFIG_DIR))
+DATA_DIR = Path(os.getenv("JARVIS_DATA_DIR", _DEFAULT_DATA_DIR))
 
-#LLM
-GPT_MODEL="qwen3:8b"
+_project_env_path = _THIS_DIR / ".env"
+ENV_PATH = Path(os.getenv("JARVIS_ENV_PATH", str(_project_env_path if _project_env_path.exists() else (CONFIG_DIR / ".env"))))
+if ENV_PATH.exists():
+    load_dotenv(dotenv_path=ENV_PATH, override=False)
+else:
+    load_dotenv(override=False)
+
+
+def _env_str(name: str, default: str) -> str:
+    value = os.getenv(name)
+    return value if value not in (None, "") else default
+
+
+def _env_int(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value in (None, ""):
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
+def _env_float(name: str, default: float) -> float:
+    value = os.getenv(name)
+    if value in (None, ""):
+        return default
+    try:
+        return float(value)
+    except ValueError:
+        return default
+
+
+def _env_list(name: str, default: list[str]) -> list[str]:
+    value = os.getenv(name)
+    if value in (None, ""):
+        return default
+    return [item.strip() for item in value.split(os.pathsep) if item.strip()]
+
+
+DEFAULT_WAKE_WORD_MODEL_PATH = str(DATA_DIR / "models" / "openwakeword" / "hey_jarvis_v0.1.tflite")
+DEFAULT_MEMORY_DB_PATH = str(DATA_DIR / "memory")
+DEFAULT_LOCAL_DB_PATH = str(DATA_DIR / "local.db")
+DEFAULT_REFERENCE_WAVS = [
+    str((_THIS_DIR / "audio" / "reference_sounds" / f"jarvis_example_{i}.wav").resolve())
+    for i in range(4)
+]
+
+# General
+SAMPLE_RATE_HZ = _env_int("JARVIS_SAMPLE_RATE_HZ", 16000)
+
+# Wake Word
+WAKE_BLOCK_SEC = _env_float("JARVIS_WAKE_BLOCK_SEC", 2.0)
+WAKE_WORD_MODEL_PATH = _env_str("JARVIS_WAKE_WORD_MODEL_PATH", DEFAULT_WAKE_WORD_MODEL_PATH)
+WAKE_TRESHOLD = _env_float("JARVIS_WAKE_TRESHOLD", 0.5)
+
+# Transcribtion
+BLOCK_SEC = _env_float("JARVIS_BLOCK_SEC", 0.25)
+WINDOW_SEC = _env_float("JARVIS_WINDOW_SEC", 7.0)
+STEP_SEC = _env_float("JARVIS_STEP_SEC", 0.25)
+ENDPOINT_SILENCE_MS = _env_int("JARVIS_ENDPOINT_SILENCE_MS", 1500)
+WHISPER_MODEL = _env_str("JARVIS_WHISPER_MODEL", "distil-large-v3")
+WHISPER_MODEL_PATH = _env_str("JARVIS_WHISPER_MODEL_PATH", str(DATA_DIR / "models" / "whisper" / WHISPER_MODEL))
+WHISPER_COMPUTE_TYPE = _env_str("JARVIS_WHISPER_COMPUTE_TYPE", "float16")
+WHISPER_DEVICE = _env_str("JARVIS_WHISPER_DEVICE", "cuda")
+TRANSCRIBTION_STAB_WINDOW = _env_int("JARVIS_TRANSCRIBTION_STAB_WINDOW", 2)
+
+# Logging
+LOG_LEVEL = _env_str("JARVIS_LOG_LEVEL", "INFO")
+
+# LLM
+GPT_MODEL = _env_str("JARVIS_GPT_MODEL", "qwen3:8b")
 SYSTEM_PROMT = (
     "You are Jarvis, created by lusparkl to help with tasks. "
     "Respond in clear, natural spoken English for TTS. "
@@ -29,27 +94,34 @@ SYSTEM_PROMT = (
     "When math or symbols appear, rewrite them in words (for example: x squared, divided by, plus, minus, equals)."
     "Don't use emojis."
 )
-MEMORY_DB_PATH="D:/tech_stuff/coding/Jarvis_Memory"
-COLLECTION_NAME="chat_history"
-SUMMARIZING_PROMT=("Describe the following conversation using only 3 keywords separated by a comma (for example: 'finance, volatility, stocks').")
-PROPS_PROMT=(
-    "You are Jarvis Memory Extractor. "
-    "Read the full chat and extract only truly useful new facts about the user that will improve future conversations. "
-    "Input may include previously saved memories; do not repeat old facts unless a new message clearly corrects them. "
-    "Use only facts explicitly stated by the user, not guesses or assistant claims. "
-    "Save long-term, reusable facts such as name, close people, preferences, dislikes, phobias, hobbies, projects, goals, routines, language, location, and important personal context. "
-    "Ignore temporary or low-value details like one-time plans, casual small talk, or uncertain information. "
-    "Output must be strict JSON only, with no markdown or extra text. "
-    "Return an array of objects in this exact shape: [{'title':'...', 'description':'...'}]. "
-    "Each object must contain exactly one key-value pair, where the key is a short title and the value is a concise description. "
-    "If there is no valuable new memory, return an empty array: []. "
-    "Do not output duplicates. "
+MEMORY_DB_PATH = _env_str("JARVIS_MEMORY_DB_PATH", DEFAULT_MEMORY_DB_PATH)
+LOCAL_DB_PATH = _env_str("JARVIS_LOCAL_DB_PATH", DEFAULT_LOCAL_DB_PATH)
+COLLECTION_NAME = _env_str("JARVIS_COLLECTION_NAME", "chat_history")
+SUMMARIZING_PROMT = _env_str(
+    "JARVIS_SUMMARIZING_PROMT",
+    "Describe the following conversation using only 3 keywords separated by a comma (for example: 'finance, volatility, stocks').",
+)
+PROPS_PROMT = _env_str(
+    "JARVIS_PROPS_PROMT",
+    (
+        "You are Jarvis Memory Extractor. "
+        "Read the full chat and extract only truly useful new facts about the user that will improve future conversations. "
+        "Input may include previously saved memories; do not repeat old facts unless a new message clearly corrects them. "
+        "Use only facts explicitly stated by the user, not guesses or assistant claims. "
+        "Save long-term, reusable facts such as name, close people, preferences, dislikes, phobias, hobbies, projects, goals, routines, language, location, and important personal context. "
+        "Ignore temporary or low-value details like one-time plans, casual small talk, or uncertain information. "
+        "Output must be strict JSON only, with no markdown or extra text. "
+        "Return an array of objects in this exact shape: [{\"title\":\"...\", \"description\":\"...\"}]. "
+        "Each object must contain both 'title' and 'description' fields. "
+        "If there is no valuable new memory, return an empty array: []. "
+        "Do not output duplicates. "
+    ),
 )
 
-#TTS
-XTTS_MODEL="xtts_v2"
-REFERENCE_WAVS = ["D:/tech_stuff/coding/ai_models/jarvis_voice_examples/jarvis_example_0.wav", "D:/tech_stuff/coding/ai_models/jarvis_voice_examples/jarvis_example_1.wav", "D:/tech_stuff/coding/ai_models/jarvis_voice_examples/jarvis_example_2.wav", "D:/tech_stuff/coding/ai_models/jarvis_voice_examples/jarvis_example_3.wav"]
-LANGUAGE="en"
-CHUNKS_CHAR_LIMIT=250
-XTTS_DEVICE="cuda"
+# TTS
+XTTS_MODEL = _env_str("JARVIS_XTTS_MODEL", "xtts_v2")
+REFERENCE_WAVS = _env_list("JARVIS_REFERENCE_WAVS", DEFAULT_REFERENCE_WAVS)
+LANGUAGE = _env_str("JARVIS_LANGUAGE", "en")
+CHUNKS_CHAR_LIMIT = _env_int("JARVIS_CHUNKS_CHAR_LIMIT", 250)
+XTTS_DEVICE = _env_str("JARVIS_XTTS_DEVICE", "cuda")
 

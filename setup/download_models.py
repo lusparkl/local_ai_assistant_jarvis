@@ -1,22 +1,16 @@
-from faster_whisper import WhisperModel
-import faster_whisper
-import openwakeword
-from TTS.api import TTS
+from pathlib import Path
+from services.model_downloads import download_runtime_models
 import config
 
-print("Downloading model, might take long time. You'r pathes will appear in the terminal one we finish")
-openwakeword_path = ""
-openwakeword.utils.download_models(["hey jarvis"])
-for path in openwakeword.get_pretrained_model_paths():
-    if "jarvis" in path:
-        openwakeword_path = path
 
-whisper_path = faster_whisper.download_model(config.WHISPER_MODEL, "setup")
-
-tts = TTS(config.XTTS_MODEL).to(config.XTTS_DEVICE)
-tts.tts_with_vc("Hello", 
-                language="en",
-                speaker_wav=config.REFERENCE_WAVS,
-                speaker="Jarvis")
-
-print(f"Here is your pathes \n openwakeword:  <{openwakeword_path}> \n whisper:   <{whisper_path}>")
+if __name__ == "__main__":
+    print("Downloading models, this may take a while.")
+    downloaded = download_runtime_models(
+        whisper_model=config.WHISPER_MODEL,
+        models_root=Path(config.DATA_DIR) / "models",
+    )
+    print(
+        "Finished.\n"
+        f"openwakeword: <{downloaded['wake_word_model_path']}>\n"
+        f"whisper: <{downloaded['whisper_model_path']}>"
+    )

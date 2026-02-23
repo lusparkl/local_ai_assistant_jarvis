@@ -2,8 +2,9 @@ from os import getenv
 from dotenv import load_dotenv
 import requests
 import json
+import config
 
-load_dotenv()
+load_dotenv(dotenv_path=config.ENV_PATH, override=False)
 api_key=getenv("WEATHER_API_KEY")
 base_url="http://api.weatherapi.com/v1"
 

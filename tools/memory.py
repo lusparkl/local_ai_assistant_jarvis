@@ -4,7 +4,9 @@ import ollama
 from services.local_db import get_table_values, insert_into_table
 from datetime import datetime
 import json
+from pathlib import Path
 
+Path(config.MEMORY_DB_PATH).mkdir(parents=True, exist_ok=True)
 client = chromadb.PersistentClient(path=config.MEMORY_DB_PATH)
 collection = client.get_or_create_collection(name=config.COLLECTION_NAME, 
     embedding_function=chromadb.utils.embedding_functions.DefaultEmbeddingFunction())
