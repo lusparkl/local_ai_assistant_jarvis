@@ -45,7 +45,7 @@ def run_new_chat(transcribing_model, tts):
     empty_turns = 0
     last_assistant_responce = last_assistant_responce_global
     logger.info("Started new chat")
-    play_placeholder_sound(config.START_LISTEN_SOUND_PATH)
+    play_placeholder_sound("audio/pointing_sounds/pipip.wav")
     while True:
         transcribtion = start_transcribing(transcribing_model)
         
@@ -77,7 +77,8 @@ def run_new_chat(transcribing_model, tts):
         dub_and_play_responce(tts, llm_responce)
 
     if len(messages) > 1:
-        play_placeholder_sound(config.SAVED_CHAT_SOUND_PATH)
+        play_placeholder_sound("audio/pointing_sounds/saved_chat.wav")
         save_chat(messages)
         save_properties(messages)
         logger.info("Saved chat")
+

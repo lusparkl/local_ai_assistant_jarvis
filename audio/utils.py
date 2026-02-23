@@ -1,4 +1,4 @@
-from config import CHUNKS_CHAR_LIMIT, THINKING_SOUNDS_DIR
+from config import CHUNKS_CHAR_LIMIT
 from pathlib import Path
 from random import randint
 
@@ -34,20 +34,20 @@ def cut_responce_to_text_chunks(llm_responce: str) -> list:
     
     return chunks
 
-def list_files(folder_path: str | Path):
+def list_files(folder_path):
     try:
         p = Path(folder_path)
         if not p.is_dir():
             raise NotADirectoryError(f"'{folder_path}' there is no placeholder sounds yet, please generate them with utils/create_plaseholder_sounds.py.")
 
-        return [str(file.resolve()) for file in p.iterdir() if file.is_file()]
+        return [file.name for file in p.iterdir() if file.is_file()]
 
     except Exception as e:
         print(f"Error: {e}")
         return []
 
 def pick_random_placeholder_sound() -> str:
-    sounds = list_files(THINKING_SOUNDS_DIR)
-    if not sounds:
-        raise FileNotFoundError(f"No placeholder sounds found in '{THINKING_SOUNDS_DIR}'.")
-    return sounds[randint(0, len(sounds) - 1)]
+    sounds = list_files("audio/thinking_sounds")
+    path = f"audio/thinking_sounds/{sounds[randint(0, len(sounds) - 1)]}"
+    
+    return path

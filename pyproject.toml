@@ -28,17 +28,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 py-modules = ["config", "main", "prod_config", "script"]
-include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["audio*", "models*", "services*", "tools*", "utils*"]
 exclude = [".venv*", "setup*"]
 namespaces = true
-
-[tool.setuptools.package-data]
-audio = [
-    "pointing_sounds/*.wav",
-    "reference_sounds/*.wav",
-    "thinking_sounds/*.wav",
-]
