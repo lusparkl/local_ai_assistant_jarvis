@@ -68,8 +68,7 @@ def run_new_chat(transcribing_model, tts):
         llm_responce = get_gpt_responce(messages)
         llm_responce = (llm_responce or "").encode("ascii", "ignore").decode("ascii").strip()
         if not llm_responce:
-            logger.info("Empty LLM responce after cleanup, skipping playback")
-            continue
+            break
 
         last_assistant_responce = llm_responce
         last_assistant_responce_global = llm_responce
