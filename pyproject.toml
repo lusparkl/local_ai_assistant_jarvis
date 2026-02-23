@@ -3,7 +3,7 @@ name = "local-ai-assistant-jarvis"
 version = "1.0.0"
 description = "Fully local ai assistant that can listen, think, talk and use coded tools. Still in dev state btw"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "chromadb",
     "click>=8.3.1",
