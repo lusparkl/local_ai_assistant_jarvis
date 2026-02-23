@@ -2,28 +2,16 @@ from pathlib import Path
 import os
 import config
 
-JARVIS_WAKE_MODEL_FILENAME = "hey_jarvis_v0.1.tflite"
-JARVIS_WAKE_MODEL_NAMES = ("hey_jarvis_v0.1", "hey jarvis")
 
-
-def _pick_jarvis_wake_path(paths: list[str], openwakeword_dir: Path) -> str:
-    expected_model_path = openwakeword_dir / JARVIS_WAKE_MODEL_FILENAME
-    if expected_model_path.exists():
-        return str(expected_model_path.resolve())
-
+def _pick_jarvis_wake_path(paths: list[str]) -> str:
     for path in paths:
-        resolved = Path(path).resolve()
-        name = resolved.name.lower()
-        if "jarvis" in name and name.endswith(".tflite"):
-            return str(resolved)
-
-    for path in openwakeword_dir.glob("*jarvis*.tflite"):
-        return str(path.resolve())
-
-    raise RuntimeError(
-        "Jarvis wake-word model was not found. "
-        f"Expected '{JARVIS_WAKE_MODEL_FILENAME}' under '{openwakeword_dir}'."
-    )
+        lower_path = path.lower()
+        if "jarvis" in lower_path and lower_path.endswith(".tflite"):
+            return path
+    for path in paths:
+        if path.lower().endswith(".tflite"):
+            return path
+    raise RuntimeError("No wake-word model path returned by openwakeword.")
 
 
 def download_runtime_models(
@@ -44,16 +32,8 @@ def download_runtime_models(
     previous_openwakeword_dir = os.getenv("OPENWAKEWORD_MODEL_DIR")
     os.environ["OPENWAKEWORD_MODEL_DIR"] = str(openwakeword_dir)
     try:
-        for model_name in JARVIS_WAKE_MODEL_NAMES:
-            try:
-                openwakeword.utils.download_models([model_name])
-            except Exception:
-                continue
-
-        wake_path = _pick_jarvis_wake_path(
-            openwakeword.get_pretrained_model_paths(),
-            openwakeword_dir,
-        )
+        openwakeword.utils.download_models(["hey jarvis"])
+        wake_path = _pick_jarvis_wake_path(openwakeword.get_pretrained_model_paths())
     finally:
         if previous_openwakeword_dir is None:
             os.environ.pop("OPENWAKEWORD_MODEL_DIR", None)

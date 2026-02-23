@@ -99,12 +99,10 @@ def _pull_ollama_model(model_name: str) -> None:
     result = subprocess.run(
         ["ollama", "pull", model_name],
         capture_output=True,
-        text=False,
+        text=True,
     )
     if result.returncode != 0:
-        stderr_text = (result.stderr or b"").decode("utf-8", errors="replace").strip()
-        stdout_text = (result.stdout or b"").decode("utf-8", errors="replace").strip()
-        details = stderr_text or stdout_text or "Unknown ollama error"
+        details = (result.stderr or result.stdout or "Unknown ollama error").strip()
         raise RuntimeError(f"Failed to pull Ollama model '{model_name}': {details}")
 
 

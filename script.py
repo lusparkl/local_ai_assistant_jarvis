@@ -1,28 +1,10 @@
 import click
-import sys
 from services.autostart import DEFAULT_TASK_NAME
-
-_MIN_PYTHON = (3, 11)
-_MAX_PYTHON_EXCLUSIVE = (3, 14)
-
-
-def _ensure_supported_python() -> None:
-    current = sys.version_info[:2]
-    if _MIN_PYTHON <= current < _MAX_PYTHON_EXCLUSIVE:
-        return
-
-    raise click.ClickException(
-        "Unsupported Python version. "
-        "Jarvis supports Python 3.11 to 3.13. "
-        "Reinstall with pipx using a supported interpreter, for example: "
-        "pipx install --python 3.12 <package-spec>"
-    )
 
 
 @click.group()
 def cli():
     """Jarvis command line tools."""
-    _ensure_supported_python()
 
 
 @cli.command()

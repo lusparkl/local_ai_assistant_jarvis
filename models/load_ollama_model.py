@@ -11,8 +11,8 @@ def start_ollama_server():
     try:
         process = subprocess.Popen(
             ["ollama", "serve"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
         logger.info("Ollama server starting...")
 
