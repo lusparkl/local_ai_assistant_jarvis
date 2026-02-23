@@ -24,7 +24,7 @@ def build_request_messages(messages: list) -> list:
 
     return [MEMORY_BEHAVIOR_GUARD] + messages
 
-def get_llm_responce(messages) -> str:
+def get_gpt_responce(messages) -> str:
     tool_rounds = 0
     used_tool_calls = set()
 

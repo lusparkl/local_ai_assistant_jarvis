@@ -1,7 +1,9 @@
 import chromadb
 import config
 import ollama
+from services.local_db import get_table_values, insert_into_table
 from datetime import datetime
+import json
 
 client = chromadb.PersistentClient(path=config.MEMORY_DB_PATH)
 collection = client.get_or_create_collection(name=config.COLLECTION_NAME, 
@@ -22,6 +24,29 @@ def save_chat(messages: list):
     }
 
     collection.add(ids=[id],documents=[chat], metadatas=[metadata])
+
+def save_properties(messages: list):
+    chat = ""
+    for m in messages:
+        chat += f"{m['role']}: <<{m['content']}>>" + "\n\n"
+
+    new_properties = ollama.generate(model=config.GPT_MODEL, prompt=config.PROPS_PROMT+"\n"+chat)["response"]
+    parsed = json.loads(new_properties) 
+    if parsed:
+        for property in parsed:
+            title, description = property["title"], property["description"]
+            insert_into_table("facts", title, description)
+
+def get_properties() -> str:
+    props = get_table_values("facts")
+    responce = ""
+    if props:
+        responce = "Here is some additional data about user: \n"
+        for prop in props:
+            responce += f"{prop[1]}: {prop[2]} \n"
+    
+    return responce
+
 
 def retrieve_memory(query: str):
     """When you need additional knowledge, you can use this tool to retrieve chats history with user.

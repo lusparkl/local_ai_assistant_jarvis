@@ -17,7 +17,7 @@ def setup_database():
 def insert_into_table(table, title, value):
     con = sqlite3.connect("local.db")
     cur = con.cursor()
-    
+
     cur.execute(f"INSERT INTO {table} (title, value) VALUES('{title}', '{value}')")
     con.commit()
     con.close()
@@ -40,5 +40,3 @@ def delete_table_value(table, id):
     
     con.commit()
     con.close()
-
-delete_table_value("todo", 1)

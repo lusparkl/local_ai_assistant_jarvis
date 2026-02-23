@@ -39,7 +39,7 @@ Since I'm trying to write modular project It'll be easy to change modules as you
 But the easisest way - add your tools. You can write tools that YOU really need, and I'm sure that there will be some, because I'm writing only tools that almost everyone needs. Now to add your tool you need:
 1. Create your file or write code in existing if theme is the same in the /tools
 2. Write your tool function that AI will use, you can use my functions as examples. And don't forget about commenting your function so AI will understand what it's for!!
-3. Import your funcion to the /services/get_llm_res.py and add it to the "available_functions" and "tools"
+3. Import and add your tool to the services/manage_tools. You can disable tools by setting value in front of it's name to False btw
 
 Your tool is now working!
 

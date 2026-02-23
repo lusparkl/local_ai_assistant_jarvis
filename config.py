@@ -9,8 +9,9 @@ WAKE_TRESHOLD = 0.5
 BLOCK_SEC=0.25
 WINDOW_SEC=7
 STEP_SEC = 0.25
-ENDPOINT_SILENCE_MS=1200
-WHISPER_MODEL = "D:/tech_stuff/coding/ai_models/huggingface_cache/hub/models--Systran--faster-distil-whisper-large-v3/snapshots/c3058b475261292e64a0412df1d2681c06260fab"
+ENDPOINT_SILENCE_MS=2000
+WHISPER_MODEL = "distil-large-v3"
+WHISPER_MODEL_PATH = "D:/tech_stuff/coding/ai_models/huggingface_cache/hub/models--Systran--faster-distil-whisper-large-v3/snapshots/c3058b475261292e64a0412df1d2681c06260fab"
 WHISPER_COMPUTE_TYPE = "float16"
 WHISPER_DEVICE = "cuda"
 TRANSCRIBTION_STAB_WINDOW = 2
@@ -31,6 +32,19 @@ SYSTEM_PROMT = (
 MEMORY_DB_PATH="D:/tech_stuff/coding/Jarvis_Memory"
 COLLECTION_NAME="chat_history"
 SUMMARIZING_PROMT=("Describe the following conversation using only 3 keywords separated by a comma (for example: 'finance, volatility, stocks').")
+PROPS_PROMT=(
+    "You are Jarvis Memory Extractor. "
+    "Read the full chat and extract only truly useful new facts about the user that will improve future conversations. "
+    "Input may include previously saved memories; do not repeat old facts unless a new message clearly corrects them. "
+    "Use only facts explicitly stated by the user, not guesses or assistant claims. "
+    "Save long-term, reusable facts such as name, close people, preferences, dislikes, phobias, hobbies, projects, goals, routines, language, location, and important personal context. "
+    "Ignore temporary or low-value details like one-time plans, casual small talk, or uncertain information. "
+    "Output must be strict JSON only, with no markdown or extra text. "
+    "Return an array of objects in this exact shape: [{'title':'...', 'description':'...'}]. "
+    "Each object must contain exactly one key-value pair, where the key is a short title and the value is a concise description. "
+    "If there is no valuable new memory, return an empty array: []. "
+    "Do not output duplicates. "
+)
 
 #TTS
 XTTS_MODEL="xtts_v2"

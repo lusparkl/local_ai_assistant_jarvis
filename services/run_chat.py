@@ -1,6 +1,6 @@
 from services.transcribe import start_transcribing
-from services.get_llm_res import get_llm_responce
-from tools.memory import save_chat
+from services.get_gpt_res import get_gpt_responce
+from tools.memory import save_chat, get_properties, save_properties
 from services.play_responce import dub_and_play_responce
 from audio.output import play_placeholder_sound
 from audio.utils import pick_random_placeholder_sound
@@ -41,7 +41,7 @@ def is_echo_like_prompt(user_text: str, last_assistant_text: str) -> bool:
 
 def run_new_chat(transcribing_model, tts):
     global last_assistant_responce_global
-    messages = [{"role":"system", "content":config.SYSTEM_PROMT}]
+    messages = [{"role":"system", "content":config.SYSTEM_PROMT + get_properties()}]
     empty_turns = 0
     last_assistant_responce = last_assistant_responce_global
     logger.info("Started new chat")
@@ -65,7 +65,7 @@ def run_new_chat(transcribing_model, tts):
         logger.info(f"Transcribed user promt, working on it: {transcribtion}")
         play_placeholder_sound(pick_random_placeholder_sound())
         messages.append({"role": "user", "content": transcribtion})
-        llm_responce = get_llm_responce(messages)
+        llm_responce = get_gpt_responce(messages)
         llm_responce = (llm_responce or "").encode("ascii", "ignore").decode("ascii").strip()
         if not llm_responce:
             logger.info("Empty LLM responce after cleanup, skipping playback")
@@ -80,5 +80,6 @@ def run_new_chat(transcribing_model, tts):
     if len(messages) > 1:
         play_placeholder_sound("audio/pointing_sounds/saved_chat.wav")
         save_chat(messages)
+        save_properties(messages)
         logger.info("Saved chat")
 
