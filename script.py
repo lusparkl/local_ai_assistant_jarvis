@@ -84,6 +84,32 @@ def doctor():
         raise click.ClickException(f"{failed} check(s) failed.")
 
 
+@cli.command()
+def devices():
+    """List available audio input devices."""
+    try:
+        import sounddevice as sd
+    except Exception as exc:
+        raise click.ClickException(f"Unable to import sounddevice: {exc}")
+
+    try:
+        all_devices = sd.query_devices()
+    except Exception as exc:
+        raise click.ClickException(f"Unable to query audio devices: {exc}")
+
+    input_count = 0
+    for index, device in enumerate(all_devices):
+        max_input = int(device.get("max_input_channels", 0))
+        if max_input <= 0:
+            continue
+        input_count += 1
+        name = device.get("name", "Unknown device")
+        click.echo(f"[{index}] {name} (inputs: {max_input})")
+
+    if input_count == 0:
+        click.echo("No audio input devices detected.")
+
+
 @cli.group()
 def autostart():
     """Manage OS autostart for Jarvis."""

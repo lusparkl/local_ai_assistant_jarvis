@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import importlib.util
 import requests
+import sounddevice as sd
 from dotenv import load_dotenv
 import config
 from services.local_db import setup_database
@@ -37,6 +38,7 @@ def _write_env(path: Path, env_values: dict[str, str]) -> None:
         "JARVIS_CONFIG_DIR",
         "JARVIS_DATA_DIR",
         "JARVIS_ENV_PATH",
+        "JARVIS_INPUT_DEVICE",
         "JARVIS_GPT_MODEL",
         "JARVIS_WHISPER_MODEL",
         "JARVIS_WHISPER_DEVICE",
@@ -77,6 +79,7 @@ def ensure_env_file(force_update: bool = False) -> Path:
         "JARVIS_CONFIG_DIR": str(config.CONFIG_DIR),
         "JARVIS_DATA_DIR": str(config.DATA_DIR),
         "JARVIS_ENV_PATH": str(env_path),
+        "JARVIS_INPUT_DEVICE": config.AUDIO_INPUT_DEVICE,
         "JARVIS_GPT_MODEL": config.GPT_MODEL,
         "JARVIS_WHISPER_MODEL": config.WHISPER_MODEL,
         "JARVIS_WHISPER_DEVICE": config.WHISPER_DEVICE,
@@ -163,6 +166,36 @@ def run_doctor() -> list[dict[str, str | bool]]:
     add_check("Whisper model path", Path(config.WHISPER_MODEL_PATH).exists(), config.WHISPER_MODEL_PATH)
     add_check("PyTorch package", importlib.util.find_spec("torch") is not None, "torch")
     add_check("Torchaudio package", importlib.util.find_spec("torchaudio") is not None, "torchaudio")
+
+    input_devices: list[dict] = []
+    try:
+        all_devices = sd.query_devices()
+        input_devices = [d for d in all_devices if d.get("max_input_channels", 0) > 0]
+        add_check("Audio input devices", len(input_devices) > 0, f"found {len(input_devices)} input device(s)")
+    except Exception as exc:
+        add_check("Audio input devices", False, f"sounddevice query failed: {exc}")
+
+    configured_device = (config.AUDIO_INPUT_DEVICE or "").strip()
+    if not configured_device:
+        add_check("Configured input device", True, "default")
+    elif not input_devices:
+        add_check("Configured input device", False, f"'{configured_device}' (no input devices available)")
+    else:
+        matched = False
+        if configured_device.isdigit():
+            configured_index = int(configured_device)
+            if 0 <= configured_index < len(all_devices):
+                matched = all_devices[configured_index].get("max_input_channels", 0) > 0
+        else:
+            configured_lower = configured_device.lower()
+            for device in input_devices:
+                name = str(device.get("name", "")).lower()
+                if configured_lower in name:
+                    matched = True
+                    break
+
+        add_check("Configured input device", matched, configured_device)
+
     add_check("Memory DB dir", Path(config.MEMORY_DB_PATH).exists(), config.MEMORY_DB_PATH)
     add_check("Local DB dir", Path(config.LOCAL_DB_PATH).parent.exists(), str(Path(config.LOCAL_DB_PATH).parent))
 
