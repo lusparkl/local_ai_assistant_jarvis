@@ -2,7 +2,6 @@ from tools.memory import retrieve_memory
 from tools.weather import get_current_weather, get_forecast
 from tools.keyboard import paste_from_user_keyboard, copy_to_user_keyboard
 from tools.todo import add_todo, get_todos, delete_todo
-from tools.end_chat import end_chat
 
 tools = {
     retrieve_memory: True,
@@ -12,8 +11,7 @@ tools = {
     copy_to_user_keyboard: True,
     add_todo: True,
     get_todos: True,
-    delete_todo: True,
-    end_chat: True
+    delete_todo: True
 }
 
 def get_available_tools():

@@ -51,9 +51,6 @@ def get_gpt_responce(messages) -> str:
 
             had_new_tool_result = False
             for tc in response.message.tool_calls:
-                if tc.function.name == "end_chat":
-                    return False
-                
                 if tc.function.name in available_functions:
                     arguments = tc.function.arguments or {}
                     if not isinstance(arguments, dict):
