@@ -4,7 +4,6 @@ from queue import Empty
 from audio.input import t_audio_callback, t_audio_q
 from config import (
     SAMPLE_RATE_HZ,
-    AUDIO_INPUT_DEVICE,
     BLOCK_SEC,
     WINDOW_SEC,
     STEP_SEC,
@@ -15,30 +14,6 @@ from services.stabilize_transcription import stabilize_transcription, extract_st
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-def _resolve_input_device():
-    if not AUDIO_INPUT_DEVICE:
-        return None
-
-    candidate = AUDIO_INPUT_DEVICE.strip()
-    if candidate.isdigit():
-        return int(candidate)
-    return candidate
-
-
-def _log_input_device_diagnostics(device) -> None:
-    try:
-        default_input, _ = sd.default.device
-    except Exception:
-        default_input = None
-
-    logger.info(
-        "Transcription input device: %s (default input index: %s)",
-        device if device is not None else "default",
-        default_input,
-    )
-
 
 def clear_t_audio_q():
     dropped = 0
@@ -52,20 +27,18 @@ def clear_t_audio_q():
     if dropped:
         logger.debug("Dropped %s stale audio blocks", dropped)
 
-
 def start_transcribing(model):
     block_samples = int(SAMPLE_RATE_HZ * BLOCK_SEC)
     window_samples = int(SAMPLE_RATE_HZ * WINDOW_SEC)
     step_samples = int(SAMPLE_RATE_HZ * STEP_SEC)
 
-    end_silence_sec = ENDPOINT_SILENCE_MS / 1000.0
-    start_timeout_sec = 10.0
-    max_listen_sec = 20.0
-    queue_wait_sec = 1.0
+    END_SILENCE_SEC = ENDPOINT_SILENCE_MS / 1000.0
+    START_TIMEOUT_SEC = 10.0
+    MAX_LISTEN_SEC = 20.0
 
-    end_silence_samples = int(end_silence_sec * SAMPLE_RATE_HZ)
-    start_timeout_samples = int(start_timeout_sec * SAMPLE_RATE_HZ)
-    max_listen_samples = int(max_listen_sec * SAMPLE_RATE_HZ)
+    end_silence_samples = int(END_SILENCE_SEC * SAMPLE_RATE_HZ)
+    start_timeout_samples = int(START_TIMEOUT_SEC * SAMPLE_RATE_HZ)
+    max_listen_samples = int(MAX_LISTEN_SEC * SAMPLE_RATE_HZ)
 
     rolling = np.zeros(0, dtype=np.float32)
     since_last_decode = 0
@@ -77,112 +50,85 @@ def start_transcribing(model):
     speech_started = False
     no_new_words_samples = 0
     total_listen_samples = 0
-    idle_wait_seconds = 0.0
 
-    input_device = _resolve_input_device()
     clear_t_audio_q()
     logger.info("Listening to transcribe...")
-    _log_input_device_diagnostics(input_device)
+    with sd.InputStream(
+        samplerate=SAMPLE_RATE_HZ,
+        channels=1,
+        dtype="float32",
+        blocksize=block_samples,
+        callback=t_audio_callback
+    ):
+        while True:
+            block = t_audio_q.get()
+            total_listen_samples += block.size
 
-    try:
-        with sd.InputStream(
-            samplerate=SAMPLE_RATE_HZ,
-            channels=1,
-            dtype="float32",
-            blocksize=block_samples,
-            callback=t_audio_callback,
-            device=input_device,
-        ):
-            while True:
-                try:
-                    block = t_audio_q.get(timeout=queue_wait_sec)
-                    idle_wait_seconds = 0.0
-                except Empty:
-                    idle_wait_seconds += queue_wait_sec
-                    if idle_wait_seconds >= 5.0 and int(idle_wait_seconds) % 5 == 0:
-                        logger.warning(
-                            "No microphone frames received for %.0f seconds. "
-                            "Check microphone permissions and selected input device.",
-                            idle_wait_seconds,
-                        )
-                    if idle_wait_seconds >= start_timeout_sec:
-                        return False
-                    continue
+            if speech_started:
+                no_new_words_samples += block.size
 
-                total_listen_samples += block.size
+            rolling = np.concatenate([rolling, block])
+            if rolling.size > window_samples:
+                rolling = rolling[-window_samples:]
 
-                if speech_started:
-                    no_new_words_samples += block.size
-
-                rolling = np.concatenate([rolling, block])
-                if rolling.size > window_samples:
-                    rolling = rolling[-window_samples:]
-
-                since_last_decode += block.size
-                if since_last_decode < step_samples:
-                    if speech_started and no_new_words_samples >= end_silence_samples and committed_text.strip():
-                        return committed_text.strip()
-                    if speech_started and no_new_words_samples >= end_silence_samples and last_partial_text.strip():
-                        return last_partial_text.strip()
-                    if not speech_started and total_listen_samples >= start_timeout_samples:
-                        return False
-                    if total_listen_samples >= max_listen_samples:
-                        if committed_text.strip():
-                            return committed_text.strip()
-                        if last_partial_text.strip():
-                            return last_partial_text.strip()
-                        return False
-                    continue
-                since_last_decode = 0
-
-                try:
-                    segments, _ = model.transcribe(
-                        rolling,
-                        beam_size=1,
-                        vad_filter=True,
-                        word_timestamps=True,
-                        condition_on_previous_text=False,
-                    )
-                except Exception as exc:
-                    logger.warning("Transcription decode failed, skipping current step: %s", exc)
-                    continue
-
-                partial_words = extract_step_words(segments)
-                if partial_words and len(partial_words) > max_partial_words_len:
-                    partial_text = " ".join(getattr(segment, "text", "").strip() for segment in segments).strip()
-                    last_partial_text = partial_text if partial_text else " ".join(partial_words)
-                    max_partial_words_len = len(partial_words)
-                    speech_started = True
-                    no_new_words_samples = 0
-
-                new_chunk, new_committed_text = stabilize_transcription(
-                    segments,
-                    committed_text,
-                    st_window,
-                    window_size=TRANSCRIBTION_STAB_WINDOW,
-                )
-                if new_committed_text != committed_text:
-                    committed_text = new_committed_text
-                    max_partial_words_len = max(max_partial_words_len, len(committed_text.split()))
-                    speech_started = True
-                    no_new_words_samples = 0
-                    if new_chunk:
-                        logger.debug("Committed chunk: %s", new_chunk)
-
+            since_last_decode += block.size
+            if since_last_decode < step_samples:
                 if speech_started and no_new_words_samples >= end_silence_samples and committed_text.strip():
                     return committed_text.strip()
                 if speech_started and no_new_words_samples >= end_silence_samples and last_partial_text.strip():
                     return last_partial_text.strip()
-
                 if not speech_started and total_listen_samples >= start_timeout_samples:
                     return False
-
                 if total_listen_samples >= max_listen_samples:
                     if committed_text.strip():
                         return committed_text.strip()
                     if last_partial_text.strip():
                         return last_partial_text.strip()
                     return False
-    except Exception as exc:
-        logger.error("Unable to open transcription input stream: %s", exc)
-        return False
+                continue
+            since_last_decode = 0
+
+            segments, _ = model.transcribe(
+                rolling,
+                beam_size=1,
+                vad_filter=True,
+                word_timestamps=True,
+                condition_on_previous_text=False
+            )
+
+            partial_words = extract_step_words(segments)
+            if partial_words and len(partial_words) > max_partial_words_len:
+                partial_text = " ".join(getattr(segment, "text", "").strip() for segment in segments).strip()
+                last_partial_text = partial_text if partial_text else " ".join(partial_words)
+                max_partial_words_len = len(partial_words)
+                speech_started = True
+                no_new_words_samples = 0
+
+            new_chunk, new_committed_text = stabilize_transcription(
+                segments,
+                committed_text,
+                st_window,
+                window_size=TRANSCRIBTION_STAB_WINDOW,
+            )
+            if new_committed_text != committed_text:
+                committed_text = new_committed_text
+                max_partial_words_len = max(max_partial_words_len, len(committed_text.split()))
+                speech_started = True
+                no_new_words_samples = 0
+                if new_chunk:
+                    logger.debug("Committed chunk: %s", new_chunk)
+
+            if speech_started and no_new_words_samples >= end_silence_samples and committed_text.strip():
+                return committed_text.strip()
+            if speech_started and no_new_words_samples >= end_silence_samples and last_partial_text.strip():
+                return last_partial_text.strip()
+
+            if not speech_started and total_listen_samples >= start_timeout_samples:
+                return False
+
+            if total_listen_samples >= max_listen_samples:
+                if committed_text.strip():
+                    return committed_text.strip()
+                if last_partial_text.strip():
+                    return last_partial_text.strip()
+                return False

@@ -27,6 +27,9 @@ def _resolve_whisper_runtime() -> tuple[str, str]:
             logger.warning("Whisper requested CUDA, but CUDA is not available. Falling back to CPU.")
             device = "cpu"
 
+    if device == "cuda" and compute_type == "int8":
+        compute_type = "float16"
+
     if device == "cpu" and compute_type in {"float16", "bfloat16"}:
         logger.warning("Whisper compute type '%s' is not supported on CPU. Falling back to 'int8'.", compute_type)
         compute_type = "int8"
