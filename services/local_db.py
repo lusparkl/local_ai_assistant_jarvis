@@ -1,19 +1,11 @@
 import sqlite3
 import logging
-from pathlib import Path
-import config
 
 logger = logging.getLogger(__name__)
-DB_PATH = Path(config.LOCAL_DB_PATH)
-
-
-def _connect():
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    return sqlite3.connect(DB_PATH)
 
 def setup_database():
     logger.info("Setting up database")
-    con = _connect()
+    con = sqlite3.connect("local.db")
     cur = con.cursor()
 
     cur.execute("CREATE TABLE IF NOT EXISTS todo(id INTEGER PRIMARY KEY AUTOINCREMENT , title VARCHAR255 NOT NULL, value TEXT)")
@@ -23,7 +15,7 @@ def setup_database():
     con.close()
 
 def insert_into_table(table, title, value):
-    con = _connect()
+    con = sqlite3.connect("local.db")
     cur = con.cursor()
 
     cur.execute(f"INSERT INTO {table} (title, value) VALUES('{title}', '{value}')")
@@ -31,7 +23,7 @@ def insert_into_table(table, title, value):
     con.close()
 
 def get_table_values(table):
-    con = _connect()
+    con = sqlite3.connect("local.db")
     cur = con.cursor()
 
     cur.execute(f"SELECT * FROM {table}")
@@ -41,7 +33,7 @@ def get_table_values(table):
     return output
 
 def delete_table_value(table, id):
-    con = _connect()
+    con = sqlite3.connect("local.db")
     cur = con.cursor()
 
     cur.execute(f"DELETE FROM {table} WHERE id = {id}")
