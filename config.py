@@ -57,8 +57,14 @@ def _env_list(name: str, default: list[str]) -> list[str]:
 DEFAULT_WAKE_WORD_MODEL_PATH = str(DATA_DIR / "models" / "openwakeword" / "hey_jarvis_v0.1.tflite")
 DEFAULT_MEMORY_DB_PATH = str(DATA_DIR / "memory")
 DEFAULT_LOCAL_DB_PATH = str(DATA_DIR / "local.db")
+PACKAGE_AUDIO_DIR = (_THIS_DIR / "audio").resolve()
+POINTING_SOUNDS_DIR = PACKAGE_AUDIO_DIR / "pointing_sounds"
+THINKING_SOUNDS_DIR = PACKAGE_AUDIO_DIR / "thinking_sounds"
+REFERENCE_SOUNDS_DIR = PACKAGE_AUDIO_DIR / "reference_sounds"
+START_LISTEN_SOUND_PATH = str(POINTING_SOUNDS_DIR / "pipip.wav")
+SAVED_CHAT_SOUND_PATH = str(POINTING_SOUNDS_DIR / "saved_chat.wav")
 DEFAULT_REFERENCE_WAVS = [
-    str((_THIS_DIR / "audio" / "reference_sounds" / f"jarvis_example_{i}.wav").resolve())
+    str((REFERENCE_SOUNDS_DIR / f"jarvis_example_{i}.wav").resolve())
     for i in range(4)
 ]
 
