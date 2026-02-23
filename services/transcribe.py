@@ -8,12 +8,10 @@ from config import (
     BLOCK_SEC,
     WINDOW_SEC,
     STEP_SEC,
-    LANGUAGE,
     ENDPOINT_SILENCE_MS,
     TRANSCRIBTION_STAB_WINDOW,
 )
 from services.stabilize_transcription import stabilize_transcription, extract_step_words
-from models.load_transcribtion_model import _resolve_whisper_runtime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -55,26 +53,10 @@ def clear_t_audio_q():
         logger.debug("Dropped %s stale audio blocks", dropped)
 
 
-def _resolve_decode_profile() -> tuple[float, float, bool]:
-    step_sec = STEP_SEC
-    window_sec = WINDOW_SEC
-    word_timestamps = True
-
-    device, _ = _resolve_whisper_runtime()
-    if device == "cpu":
-        # CPU + large whisper models can stall if we decode too often.
-        step_sec = max(step_sec, 1.5)
-        window_sec = min(window_sec, 3.5)
-        word_timestamps = False
-
-    return step_sec, window_sec, word_timestamps
-
-
 def start_transcribing(model):
     block_samples = int(SAMPLE_RATE_HZ * BLOCK_SEC)
-    decode_step_sec, decode_window_sec, use_word_timestamps = _resolve_decode_profile()
-    window_samples = int(SAMPLE_RATE_HZ * decode_window_sec)
-    step_samples = int(SAMPLE_RATE_HZ * decode_step_sec)
+    window_samples = int(SAMPLE_RATE_HZ * WINDOW_SEC)
+    step_samples = int(SAMPLE_RATE_HZ * STEP_SEC)
 
     end_silence_sec = ENDPOINT_SILENCE_MS / 1000.0
     start_timeout_sec = 10.0
@@ -101,12 +83,6 @@ def start_transcribing(model):
     clear_t_audio_q()
     logger.info("Listening to transcribe...")
     _log_input_device_diagnostics(input_device)
-    logger.info(
-        "Transcription decode profile: step=%.2fs, window=%.2fs, word_timestamps=%s",
-        decode_step_sec,
-        decode_window_sec,
-        use_word_timestamps,
-    )
 
     try:
         with sd.InputStream(
@@ -164,8 +140,7 @@ def start_transcribing(model):
                         rolling,
                         beam_size=1,
                         vad_filter=True,
-                        word_timestamps=use_word_timestamps,
-                        language=LANGUAGE,
+                        word_timestamps=True,
                         condition_on_previous_text=False,
                     )
                 except Exception as exc:

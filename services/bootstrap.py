@@ -11,15 +11,6 @@ from services.local_db import setup_database
 from models.load_ollama_model import start_ollama_server
 
 
-def _is_valid_whisper_model_path(path: str) -> bool:
-    p = Path(path)
-    if p.is_file():
-        return True
-    if p.is_dir():
-        return (p / "model.bin").exists()
-    return False
-
-
 def _read_env(path: Path) -> dict[str, str]:
     env_values: dict[str, str] = {}
     if not path.exists():
@@ -91,9 +82,9 @@ def ensure_env_file(force_update: bool = False) -> Path:
         "JARVIS_INPUT_DEVICE": config.AUDIO_INPUT_DEVICE,
         "JARVIS_GPT_MODEL": config.GPT_MODEL,
         "JARVIS_WHISPER_MODEL": config.WHISPER_MODEL,
-        "JARVIS_WHISPER_DEVICE": "cuda",
-        "JARVIS_WHISPER_COMPUTE_TYPE": "float16",
-        "JARVIS_XTTS_DEVICE": "cuda",
+        "JARVIS_WHISPER_DEVICE": config.WHISPER_DEVICE,
+        "JARVIS_WHISPER_COMPUTE_TYPE": config.WHISPER_COMPUTE_TYPE,
+        "JARVIS_XTTS_DEVICE": config.XTTS_DEVICE,
         "JARVIS_MEMORY_DB_PATH": str(Path(config.DATA_DIR) / "memory"),
         "JARVIS_LOCAL_DB_PATH": str(Path(config.DATA_DIR) / "local.db"),
     }
@@ -172,7 +163,7 @@ def run_doctor() -> list[dict[str, str | bool]]:
     add_check("Env file", config.ENV_PATH.exists(), str(config.ENV_PATH))
     add_check("Ollama in PATH", shutil.which("ollama") is not None, "ollama")
     add_check("Wake model path", Path(config.WAKE_WORD_MODEL_PATH).exists(), config.WAKE_WORD_MODEL_PATH)
-    add_check("Whisper model path", _is_valid_whisper_model_path(config.WHISPER_MODEL_PATH), config.WHISPER_MODEL_PATH)
+    add_check("Whisper model path", Path(config.WHISPER_MODEL_PATH).exists(), config.WHISPER_MODEL_PATH)
     add_check("PyTorch package", importlib.util.find_spec("torch") is not None, "torch")
     add_check("Torchaudio package", importlib.util.find_spec("torchaudio") is not None, "torchaudio")
 

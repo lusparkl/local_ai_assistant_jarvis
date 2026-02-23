@@ -36,9 +36,6 @@ def _resolve_whisper_runtime() -> tuple[str, str]:
 
 def build_transcriber() -> WhisperModel:
     device, compute_type = _resolve_whisper_runtime()
-    model_hint = (config.WHISPER_MODEL or "").lower()
-    if device == "cpu" and "large" in model_hint:
-        logger.warning("Whisper model '%s' on CPU may be very slow.", config.WHISPER_MODEL)
     return WhisperModel(
         config.WHISPER_MODEL_PATH,
         device=device,
