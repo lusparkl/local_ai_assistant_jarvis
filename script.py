@@ -30,11 +30,8 @@ def start():
     """Start assistant loop."""
     from main import run_assistant, setup_logging
 
-    try:
-        setup_logging()
-        run_assistant()
-    except Exception as exc:
-        raise click.ClickException(str(exc))
+    setup_logging()
+    run_assistant()
 
 
 @cli.command()

@@ -16,11 +16,7 @@ dependencies = [
     "python-dotenv",
     "requests",
     "scipy",
-    "sounddevice",
-    "torch",
-    "torchaudio",
-    "torchcodec",
-    "transformers<5"
+    "sounddevice"
 ]
 
 [project.scripts]

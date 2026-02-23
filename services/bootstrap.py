@@ -2,7 +2,6 @@ from pathlib import Path
 import os
 import shutil
 import subprocess
-import importlib.util
 import requests
 from dotenv import load_dotenv
 import config
@@ -39,9 +38,6 @@ def _write_env(path: Path, env_values: dict[str, str]) -> None:
         "JARVIS_ENV_PATH",
         "JARVIS_GPT_MODEL",
         "JARVIS_WHISPER_MODEL",
-        "JARVIS_WHISPER_DEVICE",
-        "JARVIS_WHISPER_COMPUTE_TYPE",
-        "JARVIS_XTTS_DEVICE",
         "JARVIS_WAKE_WORD_MODEL_PATH",
         "JARVIS_WHISPER_MODEL_PATH",
         "JARVIS_MEMORY_DB_PATH",
@@ -79,9 +75,6 @@ def ensure_env_file(force_update: bool = False) -> Path:
         "JARVIS_ENV_PATH": str(env_path),
         "JARVIS_GPT_MODEL": config.GPT_MODEL,
         "JARVIS_WHISPER_MODEL": config.WHISPER_MODEL,
-        "JARVIS_WHISPER_DEVICE": config.WHISPER_DEVICE,
-        "JARVIS_WHISPER_COMPUTE_TYPE": config.WHISPER_COMPUTE_TYPE,
-        "JARVIS_XTTS_DEVICE": config.XTTS_DEVICE,
         "JARVIS_MEMORY_DB_PATH": str(Path(config.DATA_DIR) / "memory"),
         "JARVIS_LOCAL_DB_PATH": str(Path(config.DATA_DIR) / "local.db"),
     }
@@ -161,8 +154,6 @@ def run_doctor() -> list[dict[str, str | bool]]:
     add_check("Ollama in PATH", shutil.which("ollama") is not None, "ollama")
     add_check("Wake model path", Path(config.WAKE_WORD_MODEL_PATH).exists(), config.WAKE_WORD_MODEL_PATH)
     add_check("Whisper model path", Path(config.WHISPER_MODEL_PATH).exists(), config.WHISPER_MODEL_PATH)
-    add_check("PyTorch package", importlib.util.find_spec("torch") is not None, "torch")
-    add_check("Torchaudio package", importlib.util.find_spec("torchaudio") is not None, "torchaudio")
     add_check("Memory DB dir", Path(config.MEMORY_DB_PATH).exists(), config.MEMORY_DB_PATH)
     add_check("Local DB dir", Path(config.LOCAL_DB_PATH).parent.exists(), str(Path(config.LOCAL_DB_PATH).parent))
 
