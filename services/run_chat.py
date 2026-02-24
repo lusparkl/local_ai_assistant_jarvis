@@ -14,6 +14,11 @@ last_assistant_responce_global = ""
 def normalize_text(text: str) -> str:
     return " ".join(re.findall(r"[a-z0-9']+", text.lower()))
 
+def normalize_llm_responce(text: str) -> str:
+    # Keep Unicode text so non-ASCII replies do not become empty and get skipped.
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", " ", text or "")
+    return re.sub(r"\s+", " ", text).strip()
+
 def is_echo_like_prompt(user_text: str, last_assistant_text: str) -> bool:
     if not user_text or not last_assistant_text:
         return False
@@ -65,10 +70,9 @@ def run_new_chat(transcribing_model, tts):
         logger.info(f"Transcribed user promt, working on it: {transcribtion}")
         play_placeholder_sound(pick_random_placeholder_sound())
         messages.append({"role": "user", "content": transcribtion})
-        llm_responce = get_gpt_responce(messages)
-        llm_responce = (llm_responce or "").encode("ascii", "ignore").decode("ascii").strip()
+        llm_responce = normalize_llm_responce(get_gpt_responce(messages))
         if not llm_responce:
-            logger.info("Empty LLM responce after cleanup, skipping playback")
+            logger.info("Empty LLM responce, skipping playback")
             continue
 
         last_assistant_responce = llm_responce

@@ -1,6 +1,9 @@
+import numpy as np
 import sounddevice as sd
 from queue import Empty
 from audio.input import w_audio_callback, w_audio_q
+from audio.device import resolve_input_stream_settings
+from audio.resample import resample_block
 from config import SAMPLE_RATE_HZ, WAKE_TRESHOLD, WAKE_BLOCK_SEC
 import logging
 
@@ -14,7 +17,12 @@ def clear_w_audio_q():
             break
 
 def wait_for_wake_word(model):
-    block_samples = int(SAMPLE_RATE_HZ * WAKE_BLOCK_SEC)
+    input_device, input_sample_rate = resolve_input_stream_settings(
+        target_sample_rate=SAMPLE_RATE_HZ,
+        channels=1,
+        dtype="int16",
+    )
+    block_samples = int(input_sample_rate * WAKE_BLOCK_SEC)
     clear_w_audio_q()
     if hasattr(model, "reset"):
         try:
@@ -24,7 +32,8 @@ def wait_for_wake_word(model):
 
     logger.info("Listening to wake word...")
     with sd.InputStream(
-        samplerate=SAMPLE_RATE_HZ,
+        samplerate=input_sample_rate,
+        device=input_device,
         channels=1,
         dtype="int16",
         blocksize=block_samples,
@@ -32,6 +41,12 @@ def wait_for_wake_word(model):
     ):
         while True:
             block = w_audio_q.get()
+            block = resample_block(
+                block,
+                source_rate=input_sample_rate,
+                target_rate=SAMPLE_RATE_HZ,
+                dtype=np.int16,
+            )
             prediction = model.predict(block)
 
             if prediction["hey_jarvis_v0.1"] > WAKE_TRESHOLD:

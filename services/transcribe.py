@@ -2,6 +2,8 @@ import numpy as np
 import sounddevice as sd
 from queue import Empty
 from audio.input import t_audio_callback, t_audio_q
+from audio.device import resolve_input_stream_settings
+from audio.resample import resample_block
 from config import (
     SAMPLE_RATE_HZ,
     BLOCK_SEC,
@@ -28,7 +30,12 @@ def clear_t_audio_q():
         logger.debug("Dropped %s stale audio blocks", dropped)
 
 def start_transcribing(model):
-    block_samples = int(SAMPLE_RATE_HZ * BLOCK_SEC)
+    input_device, input_sample_rate = resolve_input_stream_settings(
+        target_sample_rate=SAMPLE_RATE_HZ,
+        channels=1,
+        dtype="float32",
+    )
+    block_samples = int(input_sample_rate * BLOCK_SEC)
     window_samples = int(SAMPLE_RATE_HZ * WINDOW_SEC)
     step_samples = int(SAMPLE_RATE_HZ * STEP_SEC)
 
@@ -54,7 +61,8 @@ def start_transcribing(model):
     clear_t_audio_q()
     logger.info("Listening to transcribe...")
     with sd.InputStream(
-        samplerate=SAMPLE_RATE_HZ,
+        samplerate=input_sample_rate,
+        device=input_device,
         channels=1,
         dtype="float32",
         blocksize=block_samples,
@@ -62,6 +70,12 @@ def start_transcribing(model):
     ):
         while True:
             block = t_audio_q.get()
+            block = resample_block(
+                block,
+                source_rate=input_sample_rate,
+                target_rate=SAMPLE_RATE_HZ,
+                dtype=np.float32,
+            )
             total_listen_samples += block.size
 
             if speech_started:

@@ -24,27 +24,22 @@ def play_streamed_audio_chunks_outputstream(
     in_q: queue.Queue,
     sample_rate: int = 24000,
 ) -> None:
-    with sd.OutputStream(
-        samplerate=sample_rate,
-        channels=1,
-        dtype="float32",
-        latency="low",
-    ) as stream:
-        while True:
+    while True:
+        item = in_q.get()
 
-            item = in_q.get()
+        if item is None:
+            break
 
-            if item is None:
-                break
+        audio = np.asarray(item, dtype=np.float32)
+        if audio.size == 0:
+            continue
 
-            audio = np.asarray(item, dtype=np.float32)
+        if audio.ndim == 2 and audio.shape[0] == 1 and audio.shape[1] > 1:
+            audio = audio.ravel()
+        elif audio.ndim > 1:
+            audio = audio.mean(axis=1)
 
-            if audio.ndim == 1:
-                audio = audio[:, None]
-            elif audio.ndim == 2 and audio.shape[1] != 1:
-                audio = audio.mean(axis=1, keepdims=True)
-
-            stream.write(audio)
+        sd.play(audio, sample_rate, blocking=True)
 
 
 def play_placeholder_sound(wav) -> None:

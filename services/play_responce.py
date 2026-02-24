@@ -8,6 +8,12 @@ from audio.output import tts_stream_audio_chunks, play_streamed_audio_chunks_out
 def dub_and_play_responce(tts, text):
     q = queue.Queue()
     chunks = cut_responce_to_text_chunks(text)
+    if not chunks:
+        cleaned = (text or "").strip()
+        if cleaned:
+            chunks = [cleaned]
+        else:
+            return
 
     producer = threading.Thread(
         target=tts_stream_audio_chunks,
