@@ -10,6 +10,7 @@ This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can l
 
 ## Deps:
 
+* Ollama - must be in your path
 * Cuda - not neccesary, but without it it'll be too slow
 * Python >3.11 3.13< - because of tts library we can't run on 3.14 at the moment, but I hope soon they'll update it
 
