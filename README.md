@@ -8,6 +8,11 @@ This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can l
 
 [![Jarvis Trailer](https://img.youtube.com/vi/jkSiXKr-uqs/hqdefault.jpg)](http://www.youtube.com/watch?v=jkSiXKr-uqs "Jarvis Trailer")
 
+## Deps:
+
+* Cuda - not neccesary, but without it it'll be too slow
+* Python >3.11 3.13< - because of tts library we can't run on 3.14 at the moment, but I hope soon they'll update it
+
 ## Main libraries I used to build Jarvis:
 
 * [ollama](https://github.com/ollama/ollama-python)
