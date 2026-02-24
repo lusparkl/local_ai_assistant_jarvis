@@ -72,8 +72,7 @@ def run_new_chat(transcribing_model, tts):
         messages.append({"role": "user", "content": transcribtion})
         llm_responce = normalize_llm_responce(get_gpt_responce(messages))
         if not llm_responce:
-            logger.info("Empty LLM responce, skipping playback")
-            continue
+            break
 
         last_assistant_responce = llm_responce
         last_assistant_responce_global = llm_responce

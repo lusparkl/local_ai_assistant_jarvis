@@ -2,17 +2,11 @@
 
 ## Fully functional, but still unfinished AI assistant written on Python thats works on your PC!
 
-This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can listen, think, speak, memorize and most important use ANY tools you provide him. Currently I already wrote tools like:
+This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can listen, think, speak, memorize and most important use ANY tools you provide him. It's very customizable project.
 
-* Weather fetching
-* Keyboard interactions(read and copy stuff to your clipboard)
-* Create and edit todos
+## Short trailer for the project, haven't covered all features, but I really worked hard to create it!
 
-More coming soon!
-
-## Check it out!
-
-Place for vid, I'll update it when create first ship!
+[![Jarvis Trailer](https://img.youtube.com/vi/jkSiXKr-uqs/hqdefault.jpg)](http://www.youtube.com/watch?v=jkSiXKr-uqs "Jarvis Trailer")
 
 ## Main libraries I used to build Jarvis:
 
@@ -27,10 +21,12 @@ Place for vid, I'll update it when create first ship!
 
 ## How to install Jarvis to your PC
 
-Now the only way is to copy this repo and then to play with it for few hours:/
-
-But soon enought I'll start on working on the tutorial and may be even load Jarvis to some platform that will allow you to download him without any head aches.
-
+1. Copy this repo to your pc.
+2. Install all requirements with '''pip install -r requirements.txt'''
+3. Run '''python -m setup.download_models''' to download needed models and then paste their pathes from console to your config.py.
+4. Test run with python main.py, you can already use him this way!
+5. Run '''pyinstaller --onefile main.py''' to turn jarvis to .exe file, don't forget to test before doing it!
+6. Start up jarvis automaticaly with windows task scheduler, or smth similar if you're on linux/mac. This is good [tutorial](https://thecodebuzz.com/schedule-run-exe-console-application-windows-task-scheduler/).
 
 ## How to tweak this project for your own uses
 

@@ -23,4 +23,4 @@ tts.tts_with_vc("Hello",
                 speaker_wav=config.REFERENCE_WAVS,
                 speaker="Jarvis")
 
-print(f"Here is your pathes \n openwakeword:  <{openwakeword_path}> \n whisper:   <{whisper_path}>")
+print(f"Here is your pathes \nopenwakeword: <  {openwakeword_path}  > \nwhisper: <  {whisper_path}  >")
