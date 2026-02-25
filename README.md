@@ -1,5 +1,7 @@
 # Jarvis. Fully local AI assistant.
 
+For release installs and full setup documentation, use [README_RELEASE.md](README_RELEASE.md).
+
 ## Fully functional, but still unfinished AI assistant written on Python thats works on your PC!
 
 This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can listen, think, speak, memorize and most important use ANY tools you provide him. It's very customizable project.
