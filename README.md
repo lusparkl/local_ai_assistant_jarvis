@@ -45,7 +45,7 @@ This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can l
 5. Run full environment check:
    - `jarvis doctor`
 6. Start Jarvis:
-   - `jarvis run`
+   - `jarvis run` (or `jarvis start`)
 
 ### What `jarvis doctor` checks
 

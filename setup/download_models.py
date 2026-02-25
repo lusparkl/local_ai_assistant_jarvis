@@ -10,26 +10,45 @@ def _normalize_path(path: str | Path) -> str:
     return Path(path).expanduser().resolve().as_posix()
 
 
-def _find_jarvis_wakeword_path() -> Path:
-    for candidate in openwakeword.get_pretrained_model_paths():
+def _find_jarvis_wakeword_path(inference_framework: str) -> Path:
+    for candidate in openwakeword.get_pretrained_model_paths(inference_framework):
         name = Path(candidate).name.lower()
-        if "jarvis" in name and name.endswith(".tflite"):
+        if "jarvis" in name:
             return Path(candidate)
 
     raise RuntimeError(
-        "OpenWakeWord download finished but the Jarvis wakeword model was not found."
+        f"OpenWakeWord download finished but the Jarvis wakeword model was not found for '{inference_framework}'."
     )
 
 
 def _download_wakeword_model() -> str:
     openwakeword.utils.download_models()
-    source_path = _find_jarvis_wakeword_path()
 
     target_dir = Path(config.MODELS_DIR) / "wake"
     target_dir.mkdir(parents=True, exist_ok=True)
-    target_path = target_dir / source_path.name
-    shutil.copy2(source_path, target_path)
-    return _normalize_path(target_path)
+
+    selected_path: Path | None = None
+    copied_any = False
+    for inference_framework in ("onnx", "tflite"):
+        try:
+            source_path = _find_jarvis_wakeword_path(inference_framework)
+        except RuntimeError:
+            continue
+
+        target_path = target_dir / source_path.name
+        shutil.copy2(source_path, target_path)
+        copied_any = True
+        if source_path.suffix.lower() == ".onnx":
+            selected_path = target_path
+        elif selected_path is None:
+            selected_path = target_path
+
+    if not copied_any or selected_path is None:
+        raise RuntimeError(
+            "Failed to copy Jarvis wakeword models. Reinstall openwakeword and run setup again."
+        )
+
+    return _normalize_path(selected_path)
 
 
 def _download_whisper_model() -> str:

@@ -150,9 +150,9 @@ def _check_audio_assets(report: PreflightReport) -> None:
 def _check_model_paths(report: PreflightReport) -> None:
     wakeword_model = Path(config.WAKE_WORD_MODEL_PATH)
     if not wakeword_model.exists():
-        report.add_error(
+        report.add_warning(
             "Wakeword model",
-            "Wakeword model is missing. Run `jarvis setup` to download required models.",
+            "Configured WAKE_WORD_MODEL_PATH does not exist. Jarvis will try package defaults; run `jarvis setup` to refresh local models.",
         )
 
     whisper_path = Path(config.WHISPER_MODEL_PATH)
@@ -166,6 +166,21 @@ def _check_model_paths(report: PreflightReport) -> None:
             "Whisper model",
             f"Whisper model directory is empty: {whisper_path.as_posix()}. Run `jarvis setup`.",
         )
+
+
+def _check_wakeword_runtime(report: PreflightReport) -> None:
+    if any(issue.title == "Missing Python dependencies" for issue in report.errors):
+        return
+
+    try:
+        from models.load_wakeword_model import build_wake
+
+        model = build_wake()
+        if hasattr(model, "reset"):
+            model.reset()
+        report.add_info("Wakeword runtime", "Wakeword model loads correctly.")
+    except Exception as exc:
+        report.add_error("Wakeword runtime", str(exc))
 
 
 def _check_audio_devices(report: PreflightReport) -> None:
@@ -339,6 +354,7 @@ def run_preflight() -> PreflightReport:
     _check_memory_database(report)
     _check_audio_assets(report)
     _check_model_paths(report)
+    _check_wakeword_runtime(report)
     _check_audio_devices(report)
     _check_cuda(report)
     _check_ollama(report)

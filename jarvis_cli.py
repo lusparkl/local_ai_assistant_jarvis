@@ -79,16 +79,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     setup_parser.set_defaults(handler=lambda args: _command_setup(skip_doctor=args.skip_doctor))
 
-    run_parser = subparsers.add_parser(
-        "run",
-        help="Run Jarvis assistant (runs preflight checks first by default).",
-    )
-    run_parser.add_argument(
-        "--skip-preflight",
-        action="store_true",
-        help="Run assistant without startup checks.",
-    )
-    run_parser.set_defaults(handler=lambda args: _command_run(skip_preflight=args.skip_preflight))
+    for command_name, help_text in (
+        ("run", "Run Jarvis assistant (runs preflight checks first by default)."),
+        ("start", "Alias for `run`."),
+    ):
+        run_parser = subparsers.add_parser(
+            command_name,
+            help=help_text,
+        )
+        run_parser.add_argument(
+            "--skip-preflight",
+            action="store_true",
+            help="Run assistant without startup checks.",
+        )
+        run_parser.set_defaults(handler=lambda args: _command_run(skip_preflight=args.skip_preflight))
 
     return parser
 

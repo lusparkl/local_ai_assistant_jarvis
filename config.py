@@ -95,7 +95,7 @@ def write_user_config(overrides: dict[str, Any]) -> Path:
 
 
 def default_wakeword_model_path() -> str:
-    return _normalize_path(MODELS_DIR / "wake" / "hey_jarvis_v0.1.tflite")
+    return _normalize_path(MODELS_DIR / "wake" / "hey_jarvis_v0.1.onnx")
 
 
 def default_whisper_model_path() -> str:
