@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "my-own-jarvis"
+version = "0.1.0"
+description = "Fully local voice assistant inspired by J.A.R.V.I.S."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "faster-whisper",
+    "coqui-tts==0.27.5",
+    "transformers==4.57.6",
+    "torch==2.10.0",
+    "torchaudio==2.10.0",
+    "torchvision==0.25.0",
+    "torchcodec==0.10.0",
+    "sounddevice",
+    "openwakeword",
+    "python-dotenv",
+    "ollama",
+    "chromadb",
+    "pyperclip",
+    "numpy",
+    "scipy",
+    "requests",
+]
+
+[project.scripts]
+jarvis = "jarvis_cli:main"
+
+[tool.setuptools]
+include-package-data = true
+py-modules = ["main", "config", "jarvis_cli", "preflight"]
+
+[tool.setuptools.packages.find]
+include = ["audio*", "models*", "services*", "tools*", "setup*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+audio = ["pointing_sounds/*.wav", "reference_sounds/*.wav", "thinking_sounds/*.wav"]

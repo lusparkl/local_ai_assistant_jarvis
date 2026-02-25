@@ -9,9 +9,10 @@ torchvision==0.25.0+cu126
 torchcodec==0.10.0
 sounddevice
 openwakeword
-dotenv
+python-dotenv
 ollama
 chromadb
 pyperclip
 numpy
 scipy
+requests

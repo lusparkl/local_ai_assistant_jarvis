@@ -23,6 +23,7 @@ def run_assistant():
         run_new_chat(transcriber_model, tts_model)
 
 if __name__ == "__main__":
-    setup_logging()
-    run_assistant()
+    from jarvis_cli import main as cli_main
+
+    raise SystemExit(cli_main(["run"]))
 

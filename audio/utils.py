@@ -1,4 +1,5 @@
 from config import CHUNKS_CHAR_LIMIT
+import config
 from pathlib import Path
 from random import randint
 
@@ -47,7 +48,11 @@ def list_files(folder_path):
         return []
 
 def pick_random_placeholder_sound() -> str:
-    sounds = list_files("audio/thinking_sounds")
-    path = f"audio/thinking_sounds/{sounds[randint(0, len(sounds) - 1)]}"
-    
-    return path
+    sounds = list_files(config.THINKING_SOUNDS_DIR)
+    if not sounds:
+        raise FileNotFoundError(
+            "No thinking sounds found. Reinstall Jarvis package or regenerate placeholder sounds."
+        )
+
+    selected = sounds[randint(0, len(sounds) - 1)]
+    return str(Path(config.THINKING_SOUNDS_DIR) / selected)

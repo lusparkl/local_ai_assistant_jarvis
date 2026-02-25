@@ -12,6 +12,7 @@ This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can l
 
 * Cuda - not neccesary, but without it it'll be too slow
 * Python >3.11 3.13< - because of tts library we can't run on 3.14 at the moment, but I hope soon they'll update it
+* [Ollama runtime/CLI](https://ollama.com/download) - required (Python package `ollama` is not enough)
 
 ## Main libraries I used to build Jarvis:
 
@@ -26,12 +27,42 @@ This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can l
 
 ## How to install Jarvis to your PC
 
-1. Copy this repo to your pc.
-2. Install all requirements with '''pip install -r requirements.txt'''
-3. Run '''python -m setup.download_models''' to download needed models and then paste their pathes from console to your config.py.
-4. Test run with python main.py, you can already use him this way!
-5. Run '''pyinstaller --onefile main.py''' to turn jarvis to .exe file, don't forget to test before doing it!
-6. Start up jarvis automaticaly with windows task scheduler, or smth similar if you're on linux/mac. This is good [tutorial](https://thecodebuzz.com/schedule-run-exe-console-application-windows-task-scheduler/).
+### Fast path (recommended): `pipx`
+
+1. Install with pipx:
+   - Local repo:
+     - `pipx install .`
+   - CPU/default install:
+     - `pipx install "git+https://github.com/<your-account>/<your-repo>.git"`
+   - CUDA 12.6 install:
+     - `pipx install "git+https://github.com/<your-account>/<your-repo>.git" --python 3.12 --pip-args "--extra-index-url https://download.pytorch.org/whl/cu126"`
+2. Install Ollama runtime/CLI from `https://ollama.com/download` (if not already installed).
+3. Pull your configured LLM model:
+   - `ollama pull qwen3:8b`
+4. Download required models and persist config:
+   - `jarvis setup`
+5. Run full environment check:
+   - `jarvis doctor`
+6. Start Jarvis:
+   - `jarvis run`
+
+### What `jarvis doctor` checks
+
+- Python version compatibility (`>=3.11` and `<3.14`)
+- Required Python dependencies import correctly
+- Microphone and speaker devices are available
+- Audio stream settings are compatible with runtime config
+- Required model files exist (wakeword + whisper)
+- Ollama CLI/server/model availability (`ollama pull <model>`)
+- Runtime storage paths and writable local data directories
+
+All failures are reported with clear actionable messages.
+
+### Local data/config location
+
+- Jarvis stores runtime files in `~/.jarvis` by default.
+- Override location with `JARVIS_HOME`.
+- Config file path: `~/.jarvis/config.json` (override with `JARVIS_CONFIG_PATH`).
 
 ## How to tweak this project for your own uses
 
