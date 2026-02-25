@@ -55,7 +55,6 @@ def _check_dependencies(report: PreflightReport) -> None:
         ("torch", "torch"),
         ("torchaudio", "torchaudio"),
         ("torchvision", "torchvision"),
-        ("torchcodec", "torchcodec"),
         ("sounddevice", "sounddevice"),
         ("openwakeword", "openwakeword"),
         ("dotenv", "python-dotenv"),
