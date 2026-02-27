@@ -48,7 +48,19 @@ ollama --version
 
 ## 3. Install Jarvis
 
-## Option A: Install from GitHub release repo
+## Option A: Install from PyPI (recommended once published)
+
+CPU/default:
+```powershell
+pipx install my-own-jarvis --python 3.12
+```
+
+CUDA 12.6 (recommended):
+```powershell
+pipx install my-own-jarvis --python 3.12 --pip-args "--extra-index-url https://download.pytorch.org/whl/cu126"
+```
+
+## Option B: Install from GitHub release repo
 
 CPU/default:
 ```powershell
@@ -60,7 +72,7 @@ CUDA 12.6 (recommended):
 pipx install "git+https://github.com/lusparkl/local_ai_assistant_jarvis.git" --python 3.12 --pip-args "--extra-index-url https://download.pytorch.org/whl/cu126"
 ```
 
-## Option B: Install from local folder
+## Option C: Install from local folder
 Run from the project root (the folder containing `pyproject.toml`):
 ```powershell
 pipx install . --python 3.12 --pip-args "--extra-index-url https://download.pytorch.org/whl/cu126"
@@ -156,7 +168,7 @@ jarvis doctor
 
 ## 10. Update Jarvis
 
-If installed from GitHub:
+If installed from PyPI or GitHub:
 ```powershell
 pipx upgrade my-own-jarvis
 ```

@@ -1,5 +1,7 @@
 # Jarvis. Fully local AI assistant.
 
+PyPI package description is sourced from `README_PYPI.md`.
+
 For release installs and full setup documentation, use [README_RELEASE.md](README_RELEASE.md).
 
 ## Fully functional, but still unfinished AI assistant written on Python thats works on your PC!
@@ -33,12 +35,14 @@ This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can l
 ### Fast path (recommended): `pipx`
 
 1. Install with pipx:
+   - PyPI (after release):
+     - `pipx install my-own-jarvis --python 3.12`
    - Local repo:
      - `pipx install .`
    - CPU/default install:
-     - `pipx install "git+https://github.com/<your-account>/<your-repo>.git"`
+     - `pipx install "git+https://github.com/lusparkl/local_ai_assistant_jarvis.git"`
    - CUDA 12.6 install:
-     - `pipx install "git+https://github.com/<your-account>/<your-repo>.git" --python 3.12 --pip-args "--extra-index-url https://download.pytorch.org/whl/cu126"`
+     - `pipx install "git+https://github.com/lusparkl/local_ai_assistant_jarvis.git" --python 3.12 --pip-args "--extra-index-url https://download.pytorch.org/whl/cu126"`
 2. Install Ollama runtime/CLI from `https://ollama.com/download` (if not already installed).
 3. Pull your configured LLM model:
    - `ollama pull qwen3:8b`

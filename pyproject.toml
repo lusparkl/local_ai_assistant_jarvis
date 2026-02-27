@@ -4,10 +4,22 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "my-own-jarvis"
-version = "0.1.0"
+version = "0.1.1"
 description = "Fully local voice assistant inspired by J.A.R.V.I.S."
-readme = "README.md"
+readme = { file = "README_PYPI.md", content-type = "text/markdown" }
 requires-python = ">=3.11,<3.14"
+authors = [{ name = "lusparkl" }]
+keywords = ["jarvis", "voice-assistant", "local-ai", "ollama", "speech"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: Microsoft :: Windows",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "faster-whisper",
     "coqui-tts[codec]==0.27.5",
@@ -25,6 +37,11 @@ dependencies = [
     "scipy",
     "requests",
 ]
+
+[project.urls]
+Homepage = "https://github.com/lusparkl/local_ai_assistant_jarvis"
+Repository = "https://github.com/lusparkl/local_ai_assistant_jarvis"
+Issues = "https://github.com/lusparkl/local_ai_assistant_jarvis/issues"
 
 [project.scripts]
 jarvis = "jarvis_cli:main"
