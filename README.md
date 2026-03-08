@@ -8,6 +8,9 @@ For release installs and full setup documentation, use [README_RELEASE.md](READM
 
 This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can listen, think, speak, memorize and most important use ANY tools you provide him. It's very customizable project.
 
+## Warning
+I tested it only on windows now, so I don't guarantee that it'll work on linux/mac. If you have this devices please give me feedback is it working there🙏
+
 ## Short trailer for the project, haven't covered all features, but I really worked hard to create it!
 
 [![Jarvis Trailer](https://img.youtube.com/vi/jkSiXKr-uqs/hqdefault.jpg)](http://www.youtube.com/watch?v=jkSiXKr-uqs "Jarvis Trailer")
