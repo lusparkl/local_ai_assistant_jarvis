@@ -9,7 +9,7 @@ For release installs and full setup documentation, use [README_RELEASE.md](READM
 This project is my recreation of the J.A.R.V.I.S from "Iron Man" movie. He can listen, think, speak, memorize and most important use ANY tools you provide him. It's very customizable project.
 
 ## Warning
-I tested it only on windows now, so I don't guarantee that it'll work on linux/mac. If you have this devices please give me feedback is it working there🙏
+Windows 10/11 x64 only. Linux/macOS are not supported yet.
 
 ## Short trailer for the project, haven't covered all features, but I really worked hard to create it!
 
@@ -19,7 +19,7 @@ I tested it only on windows now, so I don't guarantee that it'll work on linux/m
 
 * Ollama - must be in your path
 * Cuda - not neccesary, but without it it'll be too slow
-* Python >3.11 3.13< - because of tts library we can't run on 3.14 at the moment, but I hope soon they'll update it
+* Python `>=3.11` and `<3.13` (Python `3.12` recommended, x64 from python.org)
 * [Ollama runtime/CLI](https://ollama.com/download) - required (Python package `ollama` is not enough)
 
 ## Main libraries I used to build Jarvis:
@@ -58,7 +58,7 @@ I tested it only on windows now, so I don't guarantee that it'll work on linux/m
 
 ### What `jarvis doctor` checks
 
-- Python version compatibility (`>=3.11` and `<3.14`)
+- Python version compatibility (`>=3.11` and `<3.13`)
 - Required Python dependencies import correctly
 - Microphone and speaker devices are available
 - Audio stream settings are compatible with runtime config
@@ -67,6 +67,15 @@ I tested it only on windows now, so I don't guarantee that it'll work on linux/m
 - Runtime storage paths and writable local data directories
 
 All failures are reported with clear actionable messages.
+
+## Sounddevice install errors
+
+If you see build-tool or compiler errors while installing:
+
+- Use Python 3.12 x64 from python.org (avoid the Microsoft Store build).
+- Upgrade pip: `python -m pip install -U pip`
+- Ensure you are not forcing source builds (`PIP_NO_BINARY` unset, avoid `--no-binary`).
+- If you must build from source, install Microsoft C++ Build Tools + Windows SDK.
 
 ### Local data/config location
 

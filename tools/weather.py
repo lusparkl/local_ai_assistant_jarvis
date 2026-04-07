@@ -1,17 +1,57 @@
 from os import getenv
 from dotenv import load_dotenv
 import requests
-import json
 from pathlib import Path
 import config
 
 load_dotenv()
 load_dotenv(Path(config.DATA_DIR) / ".env")
-api_key=getenv("WEATHER_API_KEY")
-base_url="http://api.weatherapi.com/v1"
+base_url = "http://api.weatherapi.com/v1"
 
 current_weather_params = ["temp_c", "wind_kph", "precip_mm", "humidity", "cloud", "feelslike_c", "uv"]
 forecast_params = ["maxtemp_c", "mintemp_c", "avgtemp_c", "maxwind_kph", "totalprecip_mm", "avghumidity", "uv", "sunrise", "sunset", "moonrise", "moonset", "moon_phase", "moon_illumination"]
+
+
+def _weather_api_key() -> str | None:
+    key = getenv("WEATHER_API_KEY")
+    if key:
+        return key
+
+    # Re-load in case user wrote key to ~/.jarvis/.env after process start.
+    load_dotenv(Path(config.DATA_DIR) / ".env")
+    return getenv("WEATHER_API_KEY")
+
+
+def _request_weather(endpoint: str, params: dict) -> tuple[dict | None, str | None]:
+    api_key = _weather_api_key()
+    if not api_key:
+        return None, "WEATHER_API_KEY is missing. Set it and retry."
+
+    query_params = dict(params)
+    query_params["key"] = api_key
+
+    try:
+        response = requests.get(f"{base_url}/{endpoint}", params=query_params, timeout=10)
+    except requests.exceptions.RequestException as exc:
+        return None, f"Weather API request failed: {exc}"
+
+    if response.status_code == 200:
+        try:
+            return response.json(), None
+        except ValueError:
+            return None, "Weather API returned invalid JSON."
+
+    try:
+        payload = response.json()
+    except ValueError:
+        payload = {}
+
+    detail = payload.get("error", {}).get("message")
+    if not detail:
+        detail = f"Weather API returned status {response.status_code}."
+
+    return None, detail
+
 
 def get_current_weather(city_name: str):
     """If you need to know current weather in any location you can use this tool to get weather by city name.
@@ -31,14 +71,11 @@ def get_current_weather(city_name: str):
       "uv": current Ultraviolet radiation
       }
     """
-    params = {
-        "key": api_key,
-        "q": city_name
-    }
-    responce = requests.get(base_url + "/current.json", params=params)
-    if responce.status_code == 400:
-        return "No matching location found. Try another city_name"
-    data = responce.json()["current"]
+    payload, error = _request_weather("current.json", {"q": city_name})
+    if error:
+        return error
+
+    data = payload.get("current", {})
     final_responce = {}
 
     for key, value in data.items():
@@ -74,19 +111,25 @@ def get_forecast(city_name: str, days: int):
       "moon illumination": Visibility of the moon
       }
     """    
-    days = int(days)
+    try:
+        days = int(days)
+    except Exception:
+        return "Parameter 'days' must be a number from 0 to 3."
 
-    params = {
-        "key": api_key,
-        "q": city_name,
-        "days": days
-    }
-    if days > 3:
-        return "Can't get forecast for more than 3 days."
-    responce = requests.get(base_url + "/forecast.json", params=params)
-    if responce.status_code == 400:
-        return "No matching location found. Try another city_name"
-    data = responce.json()["forecast"]["forecastday"][0]
+    if days < 0 or days > 3:
+        return "Parameter 'days' must be from 0 to 3."
+
+    # WeatherAPI expects number of forecast days including today.
+    api_days = days + 1
+    payload, error = _request_weather("forecast.json", {"q": city_name, "days": api_days})
+    if error:
+        return error
+
+    forecast_days = payload.get("forecast", {}).get("forecastday", [])
+    if len(forecast_days) <= days:
+        return "Forecast data is unavailable for the requested day."
+
+    data = forecast_days[days]
     final_responce = {}
 
     final_responce["date"] = data["date"]

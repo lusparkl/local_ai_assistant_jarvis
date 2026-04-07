@@ -186,6 +186,7 @@ SUMMARIZING_PROMT = str(
 # TTS
 XTTS_MODEL = str(_setting("XTTS_MODEL", "xtts_v2"))
 REFERENCE_WAVS = [_normalize_path(path) for path in _setting("REFERENCE_WAVS", default_reference_wavs())]
+XTTS_SPEAKER = str(_setting("XTTS_SPEAKER", "Jarvis"))
 LANGUAGE = str(_setting("LANGUAGE", "en"))
 CHUNKS_CHAR_LIMIT = int(_setting("CHUNKS_CHAR_LIMIT", 250))
 XTTS_DEVICE = str(_setting("XTTS_DEVICE", _default_device))

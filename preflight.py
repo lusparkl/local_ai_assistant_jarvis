@@ -1,8 +1,10 @@
 from dataclasses import dataclass, field
 import importlib
 from pathlib import Path
+import platform
 import shutil
 import subprocess
+import struct
 import sys
 import os
 
@@ -37,14 +39,35 @@ class PreflightReport:
 
 def _check_python(report: PreflightReport) -> None:
     version = sys.version_info
-    if (version.major, version.minor) < (3, 11) or (version.major, version.minor) >= (3, 14):
+    if (version.major, version.minor) < (3, 11) or (version.major, version.minor) >= (3, 13):
         report.add_error(
             "Python version",
-            f"Detected Python {version.major}.{version.minor}. Use Python >=3.11 and <3.14.",
+            f"Detected Python {version.major}.{version.minor}. Use Python >=3.11 and <3.13 (3.12 recommended).",
         )
         return
 
     report.add_info("Python version", f"Python {version.major}.{version.minor} is supported.")
+
+
+def _check_platform(report: PreflightReport) -> None:
+    if sys.platform != "win32":
+        report.add_error(
+            "Platform",
+            "Windows 10/11 x64 only. Use Windows 10/11 with Python 3.12 x64 from python.org.",
+        )
+        return
+
+    bits = struct.calcsize("P") * 8
+    machine = platform.machine().lower()
+    if bits != 64 or machine not in ("amd64", "x86_64"):
+        report.add_error(
+            "Platform",
+            "Windows 10/11 x64 only. Use Python 3.12 x64 from python.org. "
+            "Build-tool errors usually mean unsupported Python/architecture.",
+        )
+        return
+
+    report.add_info("Platform", "Windows x64 detected.")
 
 
 def _check_dependencies(report: PreflightReport) -> None:
@@ -172,6 +195,11 @@ def _check_wakeword_runtime(report: PreflightReport) -> None:
     if any(issue.title == "Missing Python dependencies" for issue in report.errors):
         return
 
+    wakeword_model = Path(config.WAKE_WORD_MODEL_PATH)
+    if not wakeword_model.exists():
+        # Setup has not downloaded wake models yet; path warning is already reported.
+        return
+
     try:
         from models.load_wakeword_model import build_wake
 
@@ -243,9 +271,9 @@ def _check_memory_database(report: PreflightReport) -> None:
         return
 
     try:
-        from tools.memory import collection
+        from tools.memory import get_collection
 
-        collection.count()
+        get_collection().count()
         report.add_info("Memory database", "ChromaDB collection is accessible.")
     except Exception as exc:
         report.add_error(
@@ -348,6 +376,7 @@ def _check_weather_api(report: PreflightReport) -> None:
 
 def run_preflight() -> PreflightReport:
     report = PreflightReport()
+    _check_platform(report)
     _check_python(report)
     _check_dependencies(report)
     _check_runtime_paths(report)

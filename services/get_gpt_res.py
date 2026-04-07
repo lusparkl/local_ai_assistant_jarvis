@@ -38,9 +38,16 @@ def get_gpt_responce(messages) -> str:
             "think": True
         }
 
-        response: ChatResponse = chat(
-            **request_data
-        )
+        try:
+            response: ChatResponse = chat(
+                **request_data
+            )
+        except TypeError as exc:
+            # Backward compatibility for older ollama-python versions without `think`.
+            if "think" not in str(exc):
+                raise
+            request_data.pop("think", None)
+            response = chat(**request_data)
     
         messages.append(response.message)
 
@@ -68,7 +75,10 @@ def get_gpt_responce(messages) -> str:
                     used_tool_calls.add(tool_call_key)
 
                     had_new_tool_result = True
-                    result = available_functions[tc.function.name](**arguments)
+                    try:
+                        result = available_functions[tc.function.name](**arguments)
+                    except Exception as exc:
+                        result = f"Tool '{tc.function.name}' failed: {exc}"
                     messages.append({'role': 'tool', 'tool_name': tc.function.name, 'content': str(result)})
 
             if not had_new_tool_result:

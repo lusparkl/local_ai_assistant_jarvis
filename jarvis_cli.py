@@ -24,6 +24,8 @@ def _command_setup(skip_doctor: bool) -> int:
     print(f"Wakeword model: {results['wakeword_path']}")
     print(f"Whisper model: {results['whisper_path']}")
     print(f"XTTS device: {results['xtts_device']}")
+    if "xtts_speaker" in results:
+        print(f"XTTS speaker: {results['xtts_speaker']}")
     print(f"Saved config: {results['config_path']}")
 
     if skip_doctor:

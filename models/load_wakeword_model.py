@@ -55,6 +55,34 @@ def _framework_for_model(path: Path) -> str:
     return "tflite"
 
 
+def _openwakeword_resources_dir() -> Path:
+    return Path(openwakeword.__file__).resolve().parent / "resources" / "models"
+
+
+def _missing_openwakeword_feature_models() -> list[str]:
+    resources_dir = _openwakeword_resources_dir()
+    required = ["melspectrogram.onnx", "embedding_model.onnx"]
+    return [name for name in required if not (resources_dir / name).exists()]
+
+
+def _ensure_openwakeword_feature_models() -> None:
+    missing = _missing_openwakeword_feature_models()
+    if not missing:
+        return
+
+    target_dir = _openwakeword_resources_dir()
+    target_dir.mkdir(parents=True, exist_ok=True)
+    openwakeword.utils.download_models(target_directory=target_dir.as_posix())
+
+    still_missing = _missing_openwakeword_feature_models()
+    if still_missing:
+        raise RuntimeError(
+            "OpenWakeWord feature models are missing: "
+            + ", ".join(still_missing)
+            + ". Run `jarvis setup` again."
+        )
+
+
 def build_wake() -> Model:
     candidate_paths = _candidate_model_paths()
     existing_candidates = [path for path in candidate_paths if path.exists()]
@@ -64,6 +92,8 @@ def build_wake() -> Model:
         raise RuntimeError(
             "No wakeword model file found. Run `jarvis setup` to download required models."
         )
+
+    _ensure_openwakeword_feature_models()
 
     failures: list[str] = []
     for model_path in existing_candidates:

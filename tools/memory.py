@@ -4,37 +4,93 @@ import ollama
 from services.local_db import get_table_values, insert_into_table
 from datetime import datetime
 import json
+import logging
 
-client = chromadb.PersistentClient(path=config.MEMORY_DB_PATH)
-collection = client.get_or_create_collection(name=config.COLLECTION_NAME, 
-    embedding_function=chromadb.utils.embedding_functions.DefaultEmbeddingFunction())
+logger = logging.getLogger(__name__)
+
+_memory_init_error: str | None = None
+collection = None
+
+try:
+    client = chromadb.PersistentClient(path=config.MEMORY_DB_PATH)
+    collection = client.get_or_create_collection(
+        name=config.COLLECTION_NAME,
+        embedding_function=chromadb.utils.embedding_functions.DefaultEmbeddingFunction(),
+    )
+except Exception as exc:
+    _memory_init_error = str(exc)
+
+
+def get_collection():
+    if collection is None:
+        detail = _memory_init_error or "Unknown initialization error."
+        raise RuntimeError(
+            f"Failed to initialize memory database at {config.MEMORY_DB_PATH}: {detail}"
+        )
+    return collection
 
 def save_chat(messages: list):
+    if collection is None:
+        logger.warning("Skipping memory save: %s", _memory_init_error or "memory initialization failed")
+        return
+
     chat = ""
     
     for m in messages:
         chat += f'{m["role"]}: <<{m["content"]}>>' +'\n\n'
     
-    id = str(collection.count() + 1)
-    tags = ollama.generate(model=config.GPT_MODEL, prompt=config.SUMMARIZING_PROMT+"\n"+chat)["response"]
+    try:
+        id = str(collection.count() + 1)
+    except Exception as exc:
+        logger.warning("Skipping memory save due to collection error: %s", exc)
+        return
+
+    try:
+        tags = ollama.generate(model=config.GPT_MODEL, prompt=config.SUMMARIZING_PROMT+"\n"+chat)["response"]
+    except Exception as exc:
+        logger.warning("Failed to generate memory tags: %s", exc)
+        tags = ""
+
     metadata = {
         "tags": tags,
         "date": datetime.today().strftime("%Y-%m-%d"),
         "time": datetime.today().strftime("%H:%M")
     }
 
-    collection.add(ids=[id],documents=[chat], metadatas=[metadata])
+    try:
+        collection.add(ids=[id],documents=[chat], metadatas=[metadata])
+    except Exception as exc:
+        logger.warning("Failed to persist memory chat: %s", exc)
 
 def save_properties(messages: list):
     chat = ""
     for m in messages:
         chat += f"{m['role']}: <<{m['content']}>>" + "\n\n"
 
-    new_properties = ollama.generate(model=config.GPT_MODEL, prompt=config.PROPS_PROMT+"\n"+chat)["response"]
-    parsed = json.loads(new_properties) 
+    try:
+        new_properties = ollama.generate(model=config.GPT_MODEL, prompt=config.PROPS_PROMT+"\n"+chat)["response"]
+    except Exception as exc:
+        logger.warning("Skipping properties extraction due to Ollama error: %s", exc)
+        return
+
+    try:
+        parsed = json.loads(new_properties)
+    except Exception as exc:
+        logger.warning("Skipping properties extraction due to invalid JSON response: %s", exc)
+        return
+
+    if not isinstance(parsed, list):
+        logger.warning("Skipping properties extraction because model returned non-list JSON.")
+        return
+
     if parsed:
         for property in parsed:
-            title, description = property["title"], property["description"]
+            if not isinstance(property, dict):
+                continue
+            title = property.get("title")
+            description = property.get("description")
+            if not title or not description:
+                continue
             insert_into_table("facts", title, description)
 
 def get_properties() -> str:
@@ -62,11 +118,18 @@ def retrieve_memory(query: str):
     if not clean_query:
         return "No relevant memory found."
 
-    res_db = collection.query(
-        query_texts=[clean_query],
-        n_results=5,
-        include=["documents", "distances"]
-    )
+    if collection is None:
+        return f"Memory is currently unavailable: {_memory_init_error or 'initialization failed.'}"
+
+    try:
+        res_db = collection.query(
+            query_texts=[clean_query],
+            n_results=5,
+            include=["documents", "distances"]
+        )
+    except Exception as exc:
+        logger.warning("Memory query failed: %s", exc)
+        return "No relevant memory found."
 
     documents = res_db.get("documents", [[]])[0]
     distances = res_db.get("distances", [[]])[0]

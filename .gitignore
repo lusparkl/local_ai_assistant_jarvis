@@ -210,3 +210,9 @@ __marimo__/
 *.db
 /setup/model 
 /setup/memory 
+
+# Local runtime/test artifacts
+.pipx/
+.pip_cache/
+.tmp/
+.jarvis*/

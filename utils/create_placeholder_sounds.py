@@ -38,7 +38,16 @@ phrases = [
 ]
 
 for i, phrase in enumerate(phrases):
-    tts.tts_to_file(text=phrase, speaker="Jarvis", language="en", file_path=f"audio/thinking_sounds/sound_{i}.wav")
+    kwargs = {
+        "text": phrase,
+        "language": config.LANGUAGE,
+        "file_path": f"audio/thinking_sounds/sound_{i}.wav",
+    }
+    if config.XTTS_SPEAKER.strip():
+        kwargs["speaker"] = config.XTTS_SPEAKER
+    else:
+        kwargs["speaker_wav"] = config.REFERENCE_WAVS
+    tts.tts_to_file(**kwargs)
 
 
 

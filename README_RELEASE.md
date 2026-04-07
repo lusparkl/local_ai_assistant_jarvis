@@ -5,8 +5,8 @@ This guide is for end users installing Jarvis from a release (without manual pro
 ## 1. What Must Be On Your PC
 
 Required:
-- OS: Windows 10/11 (this release flow is tested on Windows)
-- Python: `>=3.11` and `<3.14` (Python `3.12` recommended)
+- OS: Windows 10/11 x64 only (this release flow is tested on Windows)
+- Python: `>=3.11` and `<3.13` (Python `3.12` recommended, x64 from python.org)
 - `pipx` installed and available in `PATH`
 - Microphone input device
 - Speaker/headphones output device
@@ -221,6 +221,12 @@ ollama pull qwen3:8b
 
 ### Clipboard backend warning
 Non-fatal. Clipboard tools may be unavailable in some environments.
+
+### Sounddevice install errors (build tools / cffi)
+- Use Python 3.12 x64 from python.org (avoid the Microsoft Store build).
+- Upgrade pip: `python -m pip install -U pip`
+- Ensure you are not forcing source builds (`PIP_NO_BINARY` unset, avoid `--no-binary`).
+- If you must build from source, install Microsoft C++ Build Tools + Windows SDK.
 
 ### `TRANSFORMERS_CACHE` deprecation warning
 Optional cleanup:
